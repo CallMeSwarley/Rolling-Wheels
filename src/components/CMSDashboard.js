@@ -11,7 +11,7 @@ function CMSDashboard({ onLogout }) {
       ...prev,
       [day]: {
         ...prev[day],
-        [field]: field === 'closed' ? value : value
+        [field]: value
       }
     }));
   };

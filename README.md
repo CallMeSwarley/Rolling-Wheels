@@ -96,7 +96,16 @@ To access the Content Management System:
    - Password: `rolling2024`
 3. Manage opening hours and files
 
-**Note**: In a production environment, implement proper authentication with encrypted passwords and backend API.
+## ⚠️ Security Warning
+
+**IMPORTANT**: This application stores credentials in plaintext in `data.json` for demonstration purposes only. For production use:
+
+1. **Never store plaintext passwords** - Use proper password hashing (bcrypt, Argon2)
+2. **Implement backend authentication** - Use JWT tokens or session-based auth
+3. **Use environment variables** - Store sensitive data in `.env` files (not committed to git)
+4. **Add HTTPS** - Encrypt all data in transit
+5. **Implement rate limiting** - Prevent brute force attacks
+6. **Add CSRF protection** - Protect against cross-site request forgery
 
 ## Deployment
 

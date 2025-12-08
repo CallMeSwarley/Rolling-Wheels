@@ -50,6 +50,7 @@
       "caption": "Competition day"
     }
   ],
+  "_comment": "WARNING: Storing plaintext credentials is for demonstration only. In production, use proper authentication with hashed passwords and environment variables.",
   "credentials": {
     "username": "admin",
     "password": "rolling2024"
