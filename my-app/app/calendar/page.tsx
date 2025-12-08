@@ -1,10 +1,9 @@
-import React from 'react';
-import data from '../data/data.json';
+import data from '@/data/data.json';
+import type { WeekSchedule } from '@/types';
 
-function Calendar() {
-  const { openingHours } = data;
-
-  const daysOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+export default function CalendarPage() {
+  const openingHours: WeekSchedule = data.openingHours;
+  const daysOrder: (keyof WeekSchedule)[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   return (
     <div className="main-content">
@@ -29,5 +28,3 @@ function Calendar() {
     </div>
   );
 }
-
-export default Calendar;

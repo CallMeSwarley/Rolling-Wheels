@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
-import data from '../data/data.json';
+'use client';
 
-function CMSDashboard({ onLogout }) {
-  const [openingHours, setOpeningHours] = useState(data.openingHours);
-  const [files, setFiles] = useState(data.files);
+import { useState } from 'react';
+import data from '@/data/data.json';
+import type { WeekSchedule, FileItem } from '@/types';
+
+interface CMSDashboardProps {
+  onLogout: () => void;
+}
+
+export default function CMSDashboard({ onLogout }: CMSDashboardProps) {
+  const [openingHours, setOpeningHours] = useState<WeekSchedule>(data.openingHours);
+  const [files, setFiles] = useState<FileItem[]>(data.files);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const handleHoursChange = (day, field, value) => {
+  const handleHoursChange = (day: keyof WeekSchedule, field: 'open' | 'close' | 'closed', value: string | boolean) => {
     setOpeningHours(prev => ({
       ...prev,
       [day]: {
@@ -24,7 +31,7 @@ function CMSDashboard({ onLogout }) {
   };
 
   const handleAddFile = () => {
-    const newFile = {
+    const newFile: FileItem = {
       id: files.length + 1,
       name: `New Document ${files.length + 1}`,
       filename: `document-${files.length + 1}.pdf`,
@@ -34,13 +41,13 @@ function CMSDashboard({ onLogout }) {
     setFiles([...files, newFile]);
   };
 
-  const handleDeleteFile = (id) => {
+  const handleDeleteFile = (id: number) => {
     if (window.confirm('Are you sure you want to delete this file?')) {
       setFiles(files.filter(file => file.id !== id));
     }
   };
 
-  const daysOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const daysOrder: (keyof WeekSchedule)[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   return (
     <div className="cms-container">
@@ -135,5 +142,3 @@ function CMSDashboard({ onLogout }) {
     </div>
   );
 }
-
-export default CMSDashboard;

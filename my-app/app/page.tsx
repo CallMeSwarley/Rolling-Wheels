@@ -1,8 +1,7 @@
-import React from 'react';
-import SideMenu from '../components/SideMenu';
-import ImageGallery from '../components/ImageGallery';
+import SideMenu from './components/SideMenu';
+import ImageGallery from './components/ImageGallery';
 
-function Home() {
+export default function Home() {
   return (
     <div className="main-content">
       <div className="with-sidebar">
@@ -44,5 +43,3 @@ function Home() {
     </div>
   );
 }
-
-export default Home;

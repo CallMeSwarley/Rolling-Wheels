@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+'use client';
+
+import { useState } from 'react';
 import Login from '../components/Login';
 import CMSDashboard from '../components/CMSDashboard';
 
-function CMS() {
+export default function CMSPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleLogin = () => {
@@ -25,5 +27,3 @@ function CMS() {
     </div>
   );
 }
-
-export default CMS;

@@ -1,10 +1,12 @@
-import React from 'react';
-import data from '../data/data.json';
+'use client';
 
-function Downloads() {
-  const { files } = data;
+import data from '@/data/data.json';
+import type { FileItem } from '@/types';
 
-  const handleDownload = (filename) => {
+export default function DownloadsPage() {
+  const files: FileItem[] = data.files;
+
+  const handleDownload = (filename: string) => {
     alert(`Downloading ${filename}... (In a real application, this would trigger a PDF download)`);
   };
 
@@ -36,5 +38,3 @@ function Downloads() {
     </div>
   );
 }
-
-export default Downloads;

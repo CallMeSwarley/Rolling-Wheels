@@ -1,8 +1,9 @@
-import React from 'react';
-import data from '../data/data.json';
+import Image from 'next/image';
+import data from '@/data/data.json';
+import type { GalleryImage } from '@/types';
 
-function ImageGallery() {
-  const images = data.galleryImages;
+export default function ImageGallery() {
+  const images: GalleryImage[] = data.galleryImages;
 
   return (
     <div className="image-gallery">
@@ -17,5 +18,3 @@ function ImageGallery() {
     </div>
   );
 }
-
-export default ImageGallery;

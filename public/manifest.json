@@ -1,9 +1,0 @@
-{
-  "short_name": "Rolling Wheels",
-  "name": "SV Lohhof Rolling Wheels",
-  "icons": [],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
-}

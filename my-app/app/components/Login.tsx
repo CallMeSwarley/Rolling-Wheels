@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import data from '../data/data.json';
+'use client';
 
-function Login({ onLogin }) {
+import { useState, FormEvent } from 'react';
+import data from '@/data/data.json';
+
+interface LoginProps {
+  onLogin: () => void;
+}
+
+export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (username === data.credentials.username && password === data.credentials.password) {
@@ -56,5 +62,3 @@ function Login({ onLogin }) {
     </div>
   );
 }
-
-export default Login;
