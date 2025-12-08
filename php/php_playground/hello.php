@@ -27,8 +27,8 @@
 <body>
   <a href="https://rolling-wheels.net/admin/pages.php" class="edit-button">✏️ Edit Content</a>
   <?php
-  $xmlFile = __DIR__ . '/../rolling-wheels.net/data/pages/eintritt.xml';
-
+  $xmlFile = __DIR__ . '/../../rolling-wheels.net/data/pages/eintritt.xml';
+  echo "<p>$xmlFile</p>";
   if (!file_exists($xmlFile)) {
     echo "<p>Die Datei 'eintritt.xml' wurde nicht gefunden.</p>";
     exit;
