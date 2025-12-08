@@ -1,17 +1,8 @@
-export interface OpeningHours {
+export interface OpeningSlot {
   open: string;
   close: string;
-  closed: boolean;
-}
-
-export interface WeekSchedule {
-  monday: OpeningHours;
-  tuesday: OpeningHours;
-  wednesday: OpeningHours;
-  thursday: OpeningHours;
-  friday: OpeningHours;
-  saturday: OpeningHours;
-  sunday: OpeningHours;
+  date: string;
+  platzwart: string;
 }
 
 export interface FileItem {
@@ -35,7 +26,7 @@ export interface Credentials {
 }
 
 export interface AppData {
-  openingHours: WeekSchedule;
+  openingHours: OpeningSlot[];
   files: FileItem[];
   galleryImages: GalleryImage[];
   credentials: Credentials;
