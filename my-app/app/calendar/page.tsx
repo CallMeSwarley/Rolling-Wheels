@@ -10,7 +10,7 @@ import listPlugin from '@fullcalendar/list';
 import deLocale from '@fullcalendar/core/locales/de';
 
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false });
-const devMode = true; // Set to false for production
+const devMode = false; // Set to false for production
 const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
   // Sort slots by date and start time
   const sorted = [...slots].sort((a, b) => {
@@ -114,7 +114,6 @@ export default function CalendarPage() {
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
-  const calendarRef = useRef(null);
   // Form state
   const [form, setForm] = useState<OpeningSlot>({
     date: "",
@@ -136,12 +135,6 @@ export default function CalendarPage() {
     });
   }, []);
   useEffect(() => { // check if we are logged in
-    if (devMode) {
-      setLoggedIn(true);
-      setRoles(['admin']);
-      return;
-    }
-
     const apiUrl = devMode ? 'http://localhost:1234/check_session.php' : '/php_spielerei/check_session.php';
     fetch(apiUrl, { credentials: 'include' })
       .then(res => {
@@ -193,7 +186,6 @@ export default function CalendarPage() {
       if (data.success) {
         setLoggedIn(false);
         setRoles([]);
-        setShowLogin(true); // optionally show login form after logout
       }
     } catch (err) {
       console.error("Logout failed", err);
@@ -203,7 +195,7 @@ export default function CalendarPage() {
     console.log('Date selected:', selectInfo);
     const { startStr, endStr, allDay } = selectInfo;
 
-    if (!loggedIn || (!roles.includes('admin') && !roles.includes('platzwart')&& !roles.includes('dev'))) return;
+    if (!loggedIn || (!roles.includes('admin') && !roles.includes('platzwart') && !roles.includes('dev'))) return;
 
     // Extract date
     const date = startStr.split('T')[0];
@@ -263,7 +255,7 @@ export default function CalendarPage() {
               {devMode && <span style={{ marginLeft: "1rem", color: "#e66767", fontWeight: "bold" }}>[DEV MODE]</span>}
             </div>
           )}
-          <div style={{ 
+          <div style={{
             margin: smallScreen ? '0 -1rem' : '0',
             padding: smallScreen ? '0 0.5rem' : '0'
           }}>
@@ -293,10 +285,10 @@ export default function CalendarPage() {
                 const startDate = selectInfo.start;
                 const endDate = selectInfo.end;
                 const diffHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
-                
+
                 // Allow all-day selections (24 hours or more - for month/day views)
                 if (diffHours >= 24) return true;
-                
+
                 // For time-based selections (week view), require minimum 2 hours
                 return diffHours >= 2;
               }}
