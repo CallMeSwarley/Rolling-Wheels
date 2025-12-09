@@ -20,49 +20,50 @@ const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
 
   const events: { start: string; end: string; title: string }[] = [];
   let currentGroup: OpeningSlot[] = [];
+  let groupEndTime = 0;
 
   sorted.forEach(slot => {
     if (currentGroup.length === 0) {
       currentGroup.push(slot);
+      groupEndTime = new Date(`${slot.date}T${slot.close}`).getTime();
       return;
     }
 
     const lastSlot = currentGroup[currentGroup.length - 1];
-    const lastEnd = lastSlot.close;
-    const lastEndTime = new Date(`${lastSlot.date}T${lastEnd}`).getTime();
     const slotStartTime = new Date(`${slot.date}T${slot.open}`).getTime();
     const slotEndTime = new Date(`${slot.date}T${slot.close}`).getTime();
 
     // If same day and overlapping or adjacent
-    if (lastSlot.date === slot.date && slotStartTime <= lastEndTime) {
-      // Merge by extending the end if needed
-      lastSlot.close = slotEndTime > lastEndTime ? slot.close : lastEnd;
+    if (lastSlot.date === slot.date && slotStartTime <= groupEndTime) {
+      // Add to group and extend end time if needed
       currentGroup.push(slot);
+      groupEndTime = Math.max(groupEndTime, slotEndTime);
     } else {
       // Finalize previous group
       const first = currentGroup[0];
-      const last = currentGroup[currentGroup.length - 1];
+      const groupEnd = new Date(groupEndTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false });
       const platzwartDetails = currentGroup.map(s => `${s.platzwart}→${s.close}`).join(", ");
       events.push({
-        title: `${first.open} - ${last.close} &(${platzwartDetails})`,
+        title: `${first.open} - ${groupEnd} &(${platzwartDetails})`,
         start: `${first.date}T${first.open}`,
-        end: `${last.date}T${last.close}`
+        end: `${first.date}T${groupEnd}`
       });
 
       // Start new group
       currentGroup = [slot];
+      groupEndTime = new Date(`${slot.date}T${slot.close}`).getTime();
     }
   });
 
   // Finalize last group
   if (currentGroup.length > 0) {
     const first = currentGroup[0];
-    const last = currentGroup[currentGroup.length - 1];
+    const groupEnd = new Date(groupEndTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false });
     const platzwartDetails = currentGroup.map(s => `${s.platzwart}→${s.close}`).join(", ");
     events.push({
-      title: `${first.open} - ${last.close} &(${platzwartDetails})`,
+      title: `${first.open} - ${groupEnd} &(${platzwartDetails})`,
       start: `${first.date}T${first.open}`,
-      end: `${last.date}T${last.close}`
+      end: `${first.date}T${groupEnd}`
     });
   }
 
@@ -321,8 +322,8 @@ export default function CalendarPage() {
               }}
               selectConstraint={{ // This blocks selection of full day entires in month view
                 start: new Date().toISOString().split('T')[0],
-                startTime: '00:00:00',
-                endTime: '00:00:00',
+                startTime: '08:00:00',
+                endTime: '23:30:00',
               }}
               eventContent={(arg) => (
                 <div style={{ fontSize: "12px", lineHeight: "1.2" }}>
