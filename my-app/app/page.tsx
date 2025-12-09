@@ -1,5 +1,6 @@
 import SideMenu from './components/SideMenu';
 import ImageGallery from './components/ImageGallery';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -7,16 +8,26 @@ export default function Home() {
       <div className="with-sidebar">
         <SideMenu />
         <main className="page-content">
-          <h2>Welcome to Rolling Wheels</h2>
-          <p style={{ marginTop: '1rem', lineHeight: '1.8', color: '#4a5568' }}>
-            Welcome to SV Lohhof Rolling Wheels! We are a vibrant community sports
-            organization dedicated to promoting active lifestyles, teamwork, and
-            community spirit. Our facilities offer state-of-the-art equipment and
-            programs for all ages and skill levels.
-          </p>
-          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
+            <Image
+              src="/logo.png"
+              alt="Rolling Wheels Logo"
+              width={200}
+              height={280}
+              style={{ borderRadius: '6px' }}
+            />
+            <div>
+              <h2 style={{ marginBottom: '0.5rem' }}>Welcome to Rolling Wheels</h2>
+              <p style={{ fontSize: '0.95rem', color: '#dc2626', fontWeight: '500' }}>SV Lohhof - Ihr Rollsportverein</p>          <p style={{ marginTop: '1rem', lineHeight: '1.8', color: '#4a5568' }}>
+                Welcome to SV Lohhof Rolling Wheels! We are a vibrant community sports
+                organization dedicated to promoting active lifestyles, teamwork, and
+                community spirit. Our facilities offer state-of-the-art equipment and
+                programs for all ages and skill levels.
+              </p>
+            </div>
+          </div>
           <section style={{ marginTop: '3rem' }}>
-            <h3 style={{ color: '#667eea', marginBottom: '1rem' }}>About Us</h3>
+            <h3 style={{ color: '#dc2626', marginBottom: '1rem' }}>About Us</h3>
             <p style={{ lineHeight: '1.8', color: '#4a5568' }}>
               Founded with a passion for sports and community building, Rolling Wheels
               has become a cornerstone of the Lohhof community. We offer a variety of
@@ -26,12 +37,12 @@ export default function Home() {
           </section>
 
           <section style={{ marginTop: '3rem' }}>
-            <h3 style={{ color: '#667eea', marginBottom: '1rem' }}>Our Gallery</h3>
+            <h3 style={{ color: '#dc2626', marginBottom: '1rem' }}>Our Gallery</h3>
             <ImageGallery />
           </section>
 
           <section style={{ marginTop: '3rem' }}>
-            <h3 style={{ color: '#667eea', marginBottom: '1rem' }}>Get Involved</h3>
+            <h3 style={{ color: '#dc2626', marginBottom: '1rem' }}>Get Involved</h3>
             <p style={{ lineHeight: '1.8', color: '#4a5568' }}>
               Interested in joining us? Check out our registration forms in the
               Downloads section and see our opening hours in the Calendar. We look

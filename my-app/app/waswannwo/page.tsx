@@ -64,7 +64,7 @@ export default function WasWannWo() {
               display: 'inline-block',
               padding: '10px 20px',
               marginBottom: '20px',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #dc2626 0%, #1f2937 100%)',
               color: 'white',
               textDecoration: 'none',
               borderRadius: '5px',

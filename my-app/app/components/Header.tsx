@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Header() {
   const pathname = usePathname();
@@ -9,7 +10,12 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-content">
-        <h1>Rolling Wheels</h1>
+        <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
+            <Image src="/logo.png" alt="Rolling Wheels Logo" width={75} height={100} style={{ borderRadius: '4px' }} />
+            <h1>Rolling Wheels</h1>
+          </div>
+        </Link>
         <nav>
           <Link href="/" className={pathname === '/' ? 'active' : ''}>
             Home

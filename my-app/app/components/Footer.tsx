@@ -1,9 +1,14 @@
+import Image from 'next/image';
+
 export default function Footer() {
   return (
     <footer className="footer">
       <div className="footer-content">
         <div className="footer-section">
-          <h4>About Us</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <Image src="/logo.png" alt="Rolling Wheels Logo" width={40} height={40} style={{ borderRadius: '3px' }} />
+            <h4>About Us</h4>
+          </div>
           <p>
             SV Lohhof Rolling Wheels is a community sports organization
             dedicated to promoting active lifestyles and teamwork.

@@ -13,7 +13,7 @@ export default function DownloadsPage() {
   return (
     <div className="main-content">
       <div className="page-content full-width">
-        <h2 style={{ color: '#667eea', marginBottom: '2rem' }}>Download Registration Forms</h2>
+        <h2 style={{ color: '#dc2626', marginBottom: '2rem' }}>Download Registration Forms</h2>
         <p style={{ color: '#4a5568', marginBottom: '2rem' }}>
           Download the necessary registration forms to join Rolling Wheels. All forms are in PDF format.
         </p>

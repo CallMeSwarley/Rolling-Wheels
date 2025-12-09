@@ -42,9 +42,9 @@ const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
       // Finalize previous group
       const first = currentGroup[0];
       const last = currentGroup[currentGroup.length - 1];
-      const platzwarts = currentGroup.map(s => s.platzwart).join(", ");
+      const platzwartDetails = currentGroup.map(s => `${s.platzwart}→${s.close}`).join(", ");
       events.push({
-        title: `${first.open} - ${last.close} &(${platzwarts})`, // TODO to each platzwart add their end hour: maxi->10:00, teste->13:00
+        title: `${first.open} - ${last.close} &(${platzwartDetails})`,
         start: `${first.date}T${first.open}`,
         end: `${last.date}T${last.close}`
       });
@@ -58,9 +58,9 @@ const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
   if (currentGroup.length > 0) {
     const first = currentGroup[0];
     const last = currentGroup[currentGroup.length - 1];
-    const platzwarts = currentGroup.map(s => s.platzwart).join(", ");
+    const platzwartDetails = currentGroup.map(s => `${s.platzwart}→${s.close}`).join(", ");
     events.push({
-      title: `${first.open} - ${last.close} &(${platzwarts})`,
+      title: `${first.open} - ${last.close} &(${platzwartDetails})`,
       start: `${first.date}T${first.open}`,
       end: `${last.date}T${last.close}`
     });
@@ -259,7 +259,7 @@ export default function CalendarPage() {
               fontSize: "0.9rem"
             }}>
               💡 <strong>Tip:</strong> In week view, click and drag to select your desired time slot (minimum 2 hours). To add overlapping entries, click in the empty space next to existing events (clicking on events won't work). You can also fill in the form manually.
-              {devMode && <span style={{ marginLeft: "1rem", color: "#dc2626", fontWeight: "bold" }}>[DEV MODE]</span>}
+              {devMode && <span style={{ marginLeft: "1rem", color: "#e66767", fontWeight: "bold" }}>[DEV MODE]</span>}
             </div>
           )}
           <div style={{ 
@@ -332,7 +332,7 @@ export default function CalendarPage() {
                   </div>
                 </div>
               )}
-              eventColor="#667eea"
+              eventColor="#e66767"
               eventTextColor="#ffffff"
             />
           </div>
@@ -340,7 +340,7 @@ export default function CalendarPage() {
             <div className="cms-section" style={{ marginTop: "3rem" }}>
               <div className="cms-header">
                 <div>
-                  <h3 style={{ color: "#667eea", marginBottom: "0.5rem" }}>Add New Opening Slot</h3>
+                  <h3 style={{ color: "#dc2626", marginBottom: "0.5rem" }}>Add New Opening Slot</h3>
                   <p style={{ color: "#718096", fontSize: "0.9rem", marginBottom: "1rem" }}>
                     Minimum duration: 2 hours. You can extend existing sessions by adding overlapping slots or adjacent slots.
                   </p>
@@ -399,7 +399,7 @@ export default function CalendarPage() {
             </div>
           ) : (
             <div className="login-form" style={{ marginTop: "3rem", maxWidth: "500px", marginLeft: "auto", marginRight: "auto" }}>
-              <h3 style={{ color: "#667eea", marginBottom: "0.5rem", textAlign: "center" }}>Login Required</h3>
+              <h3 style={{ color: "#dc2626", marginBottom: "0.5rem", textAlign: "center" }}>Login Required</h3>
               <p style={{ color: "#718096", fontSize: "0.9rem", marginBottom: "2rem", textAlign: "center" }}>
                 Please login to add new opening slots
               </p>

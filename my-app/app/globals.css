@@ -23,7 +23,7 @@ body {
 
 /* Header */
 .header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #1f2937 100%);
   color: white;
   padding: 1.5rem 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -97,7 +97,7 @@ body {
 }
 
 .side-menu h3 {
-  color: #667eea;
+  color: #dc2626;
   margin-bottom: 1rem;
   font-size: 1.2rem;
 }
@@ -121,12 +121,12 @@ body {
 
 .side-menu a:hover {
   background: #e9ecef;
-  color: #667eea;
+  color: #dc2626;
 }
 
 /* Footer */
 .footer {
-  background: #2d3748;
+  background: #1f2937;
   color: white;
   padding: 2rem;
   margin-top: auto;
@@ -238,7 +238,7 @@ body {
 }
 
 .download-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #1f2937 100%);
   color: white;
   border: none;
   padding: 0.8rem 1.5rem;
@@ -268,7 +268,7 @@ body {
 }
 
 .calendar h2 {
-  color: #667eea;
+  color: #dc2626;
   margin-bottom: 2rem;
   text-align: center;
 }
@@ -285,7 +285,7 @@ body {
   padding: 1rem;
   background: #f8f9fa;
   border-radius: 6px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #dc2626;
 }
 
 .calendar-day.closed {
@@ -327,7 +327,7 @@ body {
 }
 
 .login-form h2 {
-  color: #667eea;
+  color: #dc2626;
   margin-bottom: 1.5rem;
   text-align: center;
 }
@@ -355,12 +355,12 @@ body {
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #dc2626;
 }
 
 .btn-primary {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #1f2937 100%);
   color: white;
   border: none;
   padding: 1rem;
@@ -394,7 +394,7 @@ body {
 }
 
 .cms-header h2 {
-  color: #667eea;
+  color: #dc2626;
 }
 
 .btn-logout {
@@ -536,7 +536,7 @@ body {
 }
 
 .xml-content h3 {
-  color: #667eea;
+  color: #dc2626;
   font-size: 1.5rem;
   font-weight: 700;
   margin-top: 2rem;
@@ -580,7 +580,7 @@ body {
 
 .xml-content table td:last-child {
   text-align: right;
-  color: #667eea;
+  color: #dc2626;
   font-weight: 600;
 }
 
@@ -588,7 +588,7 @@ body {
   display: inline-block;
   padding: 12px 24px;
   margin: 10px 10px 10px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #1f2937 100%);
   color: white;
   text-decoration: none;
   border-radius: 5px;
@@ -598,7 +598,7 @@ body {
 
 .xml-content a.button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 5px 20px rgba(220, 38, 38, 0.4);
 }
 
 .xml-content ol {
@@ -617,17 +617,17 @@ body {
 }
 
 .xml-content a:not(.button) {
-  color: #667eea;
+  color: #dc2626;
   text-decoration: none;
   transition: color 0.3s;
 }
 
 .xml-content a:not(.button):hover {
-  color: #764ba2;
+  color: #1f2937;
   text-decoration: underline;
 }
 
 .edit-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 5px 20px rgba(220, 38, 38, 0.4);
 }
