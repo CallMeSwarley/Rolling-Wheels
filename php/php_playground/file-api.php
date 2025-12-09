@@ -52,13 +52,28 @@ if ($action === 'read_calendar') {
 }
 
 // --- ADMIN AUTH CHECK --- uncomment when auth system is ready
-// For demo: you can replace this with your real auth system
+$allowed_roles = ['dev', 'platzwart', 'admin'];
+if (empty($_SESSION['loggedin'])) {
+    http_response_code(401);
+    echo json_encode(["error" => "Not authenticated"]);
+    exit;
+}
+if (!array_intersect($_SESSION['roles'], $allowed_roles)) {
+    http_response_code(403);
+    echo json_encode(["error" => "Access denied: you do not have permission to write the calendar."]);
+    exit;
+}
+// if (!isset($_COOKIE['session'])) {
+//     http_response_code(401);
+//     echo json_encode(["error" => "Not authenticated"]);
+//     exit;
+// }
 // if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 //     http_response_code(403);
 //     echo json_encode(['error' => 'Access denied']);
 //     exit;
 // }
-
+// $token = $_COOKIE['session'];
 function insertSlot($filePath, $newSlot, $minDurationMinutes = 120)
 {
     // Load existing JSON data
@@ -127,10 +142,11 @@ function insertSlot($filePath, $newSlot, $minDurationMinutes = 120)
 // write actions, require admin auth (in future we need a "Platzwart" role for that)
 if ($action === 'add_slot') {
     $newSlot = $input['newSlot'] ?? null;
-    
+    $newSlot['platzwart'] = $_SESSION['username'];
+
     // Print slot data to error log
     error_log("New slot data: " . print_r($newSlot, true));
-    
+
     // Validate that newSlot exists and is an array
     if (!$newSlot || !is_array($newSlot)) {
         echo json_encode(['success' => false, 'error' => 'Missing or invalid newSlot data']);
@@ -158,11 +174,6 @@ if ($action === 'add_slot') {
         exit;
     }
 
-    // Validate platzwart if provided (must be alphanumeric/safe string)
-    if (isset($newSlot['platzwart']) && !preg_match('/^[a-zA-Z0-9_\- ]+$/', $newSlot['platzwart'])) {
-        echo json_encode(['success' => false, 'error' => 'Platzwart contains invalid characters']);
-        exit;
-    }
 
     // All validations passed, insert the slot
     $new_slots = insertSlot($calendarfilePath, $newSlot);

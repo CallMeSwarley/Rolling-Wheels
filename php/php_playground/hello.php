@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (empty($_SESSION['loggedin'])) {
+  header("Location: login.php");
+  exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="de">
 
@@ -25,6 +32,7 @@
 </head>
 
 <body>
+  <a href="logout.php">Logout</a>
   <a href="https://rolling-wheels.net/admin/pages.php" class="edit-button">✏️ Edit Content</a>
   <?php
   $xmlFile = __DIR__ . '/../../rolling-wheels.net/data/pages/eintritt.xml';

@@ -35,6 +35,10 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 
+# user files
+user.xml
+hash.php
+
 # vercel
 .vercel
 
