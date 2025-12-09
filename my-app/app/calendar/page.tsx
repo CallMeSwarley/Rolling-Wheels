@@ -163,7 +163,8 @@ export default function CalendarPage() {
               )}
             />
           </div>
-          <h3>Add New Slot</h3>
+          <h3>Add New Slot (min. 120 minutes)</h3>
+          <p>To extend a session you can add a new slot immediately after the last one. (Overlapping is also possible for extending less than 120 minutes)</p>
           <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
             <input
               type="date"
@@ -186,7 +187,7 @@ export default function CalendarPage() {
             />
             <input
               type="text"
-              placeholder="Platzwart"
+              placeholder="Platzwart" // TODO this will be added serverside trough authenticated session later
               value={form.platzwart}
               onChange={(e) => setForm({ ...form, platzwart: e.target.value })}
               required
