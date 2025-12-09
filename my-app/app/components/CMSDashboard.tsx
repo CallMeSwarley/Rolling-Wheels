@@ -2,33 +2,15 @@
 
 import { useState } from 'react';
 import data from '@/data/data.json';
-import type { WeekSchedule, FileItem } from '@/types';
+import type { FileItem } from '@/types';
 
 interface CMSDashboardProps {
   onLogout: () => void;
 }
 
 export default function CMSDashboard({ onLogout }: CMSDashboardProps) {
-  const [openingHours, setOpeningHours] = useState<WeekSchedule>(data.openingHours);
   const [files, setFiles] = useState<FileItem[]>(data.files);
   const [successMessage, setSuccessMessage] = useState('');
-
-  const handleHoursChange = (day: keyof WeekSchedule, field: 'open' | 'close' | 'closed', value: string | boolean) => {
-    setOpeningHours(prev => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        [field]: value
-      }
-    }));
-  };
-
-  const handleSaveHours = () => {
-    // In a real application, this would save to a backend or file
-    console.log('Saving opening hours:', openingHours);
-    setSuccessMessage('Opening hours saved successfully!');
-    setTimeout(() => setSuccessMessage(''), 3000);
-  };
 
   const handleAddFile = () => {
     const newFile: FileItem = {
@@ -47,7 +29,6 @@ export default function CMSDashboard({ onLogout }: CMSDashboardProps) {
     }
   };
 
-  const daysOrder: (keyof WeekSchedule)[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
   return (
     <div className="cms-container">
@@ -60,51 +41,12 @@ export default function CMSDashboard({ onLogout }: CMSDashboardProps) {
 
       <div className="cms-sections">
         {/* Opening Hours Management */}
-        <section className="cms-section">
-          <h3>Manage Opening Hours</h3>
-          <div className="hours-grid">
-            {daysOrder.map((day) => {
-              const hours = openingHours[day];
-              return (
-                <div key={day} className="hours-row">
-                  <label>{day}</label>
-                  <input
-                    type="time"
-                    value={hours.open}
-                    onChange={(e) => handleHoursChange(day, 'open', e.target.value)}
-                    disabled={hours.closed}
-                  />
-                  <input
-                    type="time"
-                    value={hours.close}
-                    onChange={(e) => handleHoursChange(day, 'close', e.target.value)}
-                    disabled={hours.closed}
-                  />
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={hours.closed}
-                      onChange={(e) => handleHoursChange(day, 'closed', e.target.checked)}
-                    />
-                    Closed
-                  </label>
-                </div>
-              );
-            })}
-          </div>
-          <button className="btn-save" onClick={handleSaveHours}>
-            Save Opening Hours
-          </button>
-          {successMessage && (
-            <div className="success-message">{successMessage}</div>
-          )}
-        </section>
 
         {/* File Management */}
         <section className="cms-section">
           <h3>Manage Files</h3>
-          <button 
-            className="btn-primary" 
+          <button
+            className="btn-primary"
             onClick={handleAddFile}
             style={{ marginBottom: '1rem', width: 'auto' }}
           >
