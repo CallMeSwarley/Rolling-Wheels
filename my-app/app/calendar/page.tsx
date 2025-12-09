@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import listPlugin from '@fullcalendar/list';
 import deLocale from '@fullcalendar/core/locales/de';
 
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false });
@@ -101,6 +102,16 @@ export default function CalendarPage() {
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [loginError, setLoginError] = useState("");
   const [roles, setRoles] = useState<string[]>([]);
+  const [smallScreen, setSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setSmallScreen(window.innerWidth < 600);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const calendarRef = useRef(null);
   // Form state
@@ -188,9 +199,10 @@ export default function CalendarPage() {
     }
   };
   const handleDateSelect = (selectInfo: any) => {
+    console.log('Date selected:', selectInfo);
     const { startStr, endStr, allDay } = selectInfo;
 
-    if (!loggedIn || (!roles.includes('admin') && !roles.includes('platzwart'))) return;
+    if (!loggedIn || (!roles.includes('admin') && !roles.includes('platzwart')&& !roles.includes('dev'))) return;
 
     // Extract date
     const date = startStr.split('T')[0];
@@ -246,54 +258,71 @@ export default function CalendarPage() {
               color: "#0c4a6e",
               fontSize: "0.9rem"
             }}>
-              💡 <strong>Tip:</strong> In week view, click and drag to select your desired time slot (minimum 2 hours). To add overlapping entries, click in the empty space next to existing events (clicking on events won't work). You can also click on a date (in month view) to fill in the form manually.
+              💡 <strong>Tip:</strong> In week view, click and drag to select your desired time slot (minimum 2 hours). To add overlapping entries, click in the empty space next to existing events (clicking on events won't work). You can also fill in the form manually.
               {devMode && <span style={{ marginLeft: "1rem", color: "#dc2626", fontWeight: "bold" }}>[DEV MODE]</span>}
             </div>
           )}
-          <div>
+          <div style={{ 
+            margin: smallScreen ? '0 -1rem' : '0',
+            padding: smallScreen ? '0 0.5rem' : '0'
+          }}>
             <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView="timeGridWeek"
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
+              initialView={smallScreen ? "listWeek" : "dayGridMonth"}
               slotMinTime="08:00:00"   // earliest hour shown (8 AM)
               slotMaxTime="23:30:00"   // latest hour shown (11:30 PM)
+              allDaySlot={false}
+              nowIndicator={true}
               locale={deLocale}
               events={events}
               height="auto"
               selectable={loggedIn && (roles.includes('admin') || roles.includes('platzwart'))}
               selectMirror={true}
+              selectLongPressDelay={500}
+              // selectMinDistance={5}
+              // unselectAuto={true}
+              // unselectCancel=".fc-event"
+              longPressDelay={500}
+              eventLongPressDelay={500}
               dayMaxEvents={true}
               weekends={true}
               select={handleDateSelect}
               selectAllow={(selectInfo) => {
+                console.log('Select allow check:', selectInfo);
                 const startDate = selectInfo.start;
                 const endDate = selectInfo.end;
-                // 1. Minimum 2 hours
                 const diffHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
-                return diffHours >= 2 ;
+                
+                // Allow all-day selections (24 hours or more - for month/day views)
+                if (diffHours >= 24) return true;
+                
+                // For time-based selections (week view), require minimum 2 hours
+                return diffHours >= 2;
               }}
               eventOverlap={true}
+              headerToolbar={
+                smallScreen
+                  ? { left: 'prev next', center: 'title', right: 'dayGridMonth timeGridWeek listWeek' }
+                  : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' }
+              }
               eventDidMount={(info) => {
                 info.el.style.width = '85%';         // make the event narrower
                 info.el.style.boxSizing = 'border-box';
-              }}
-              headerToolbar={{
-                left: 'prev,next today',
-                center: 'title',
-                right: 'dayGridMonth,timeGridWeek' //,timeGridDay
               }}
               buttonText={{
                 today: 'Heute',
                 month: 'Monat',
                 week: 'Woche',
-                day: 'Tag'
+                day: 'Tag',
+                list: 'Liste'
               }}
               validRange={{
                 start: new Date().toISOString().split('T')[0]
               }}
-              selectConstraint={{
+              selectConstraint={{ // This blocks selection of full day entires in month view
                 start: new Date().toISOString().split('T')[0],
-                startTime: '08:00:00',
-                endTime: '23:30:00',
+                startTime: '00:00:00',
+                endTime: '00:00:00',
               }}
               eventContent={(arg) => (
                 <div style={{ fontSize: "12px", lineHeight: "1.2" }}>

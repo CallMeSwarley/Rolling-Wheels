@@ -36,6 +36,12 @@
         "platzwart": "maxi_test"
     },
     {
+        "date": "2025-12-10",
+        "open": "18:30",
+        "close": "23:00",
+        "platzwart": "maxi_test"
+    },
+    {
         "open": "09:00",
         "close": "18:00",
         "date": "2025-12-11",
@@ -112,6 +118,12 @@
         "open": "04:22",
         "close": "19:22",
         "platzwart": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+        "date": "2025-12-17",
+        "open": "12:10",
+        "close": "19:54",
+        "platzwart": "maxi_test"
     },
     {
         "date": "2025-12-25",
