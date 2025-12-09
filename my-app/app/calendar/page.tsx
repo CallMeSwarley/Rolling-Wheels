@@ -6,6 +6,8 @@ import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import deLocale from '@fullcalendar/core/locales/de';
+import { Calendar } from '@fullcalendar/core';
 
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false });
 
@@ -200,7 +202,6 @@ export default function CalendarPage() {
   };
 
   const events = mergeAdjacentOrOverlappingSlots(slots || []);
-
   return (
     <div className="main-content">
       <div className="page-content full-width">
@@ -222,66 +223,107 @@ export default function CalendarPage() {
               )}
             />
           </div>
-          <h3>Add New Slot (min. 120 minutes)</h3>
-          <p>To extend a session you can add a new slot immediately after the last one. (Overlapping is also possible for extending less than 120 minutes)</p>
           {loggedIn && (roles.includes('admin') || roles.includes('platzwart')) ? (
-            <div>
-              <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  required
-                  min={new Date().toISOString().split("T")[0]} // today or later
-                />
-                <input
-                  type="time"
-                  value={form.open}
-                  onChange={(e) => setForm({ ...form, open: e.target.value })}
-                  required
-                />
-                <input
-                  type="time"
-                  value={form.close}
-                  onChange={(e) => setForm({ ...form, close: e.target.value })}
-                  required
-                />
-                {/* <input
-              type="text"
-              placeholder="Platzwart" // TODO this will be added serverside trough authenticated session later
-              value={form.platzwart}
-              onChange={(e) => setForm({ ...form, platzwart: e.target.value })}
-              required
-              pattern="[A-Za-z\s]+"
-              maxLength={30}
-            /> */}
-                <button type="submit">Add Slot</button>
+            <div className="cms-section" style={{ marginTop: "3rem" }}>
+              <div className="cms-header">
+                <div>
+                  <h3 style={{ color: "#667eea", marginBottom: "0.5rem" }}>Add New Opening Slot</h3>
+                  <p style={{ color: "#718096", fontSize: "0.9rem", marginBottom: "1rem" }}>
+                    Minimum duration: 120 minutes. You can extend existing sessions by adding overlapping slots.
+                  </p>
+                </div>
+                <button onClick={handleLogout} className="btn-logout">
+                  Logout
+                </button>
+              </div>
+              <form onSubmit={handleSubmit} className="form-group" style={{ display: "grid", gap: "1.5rem" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label htmlFor="slot-date" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
+                    Date
+                  </label>
+                  <input
+                    id="slot-date"
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    required
+                    min={new Date().toISOString().split("T")[0]}
+                    style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
+                  />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label htmlFor="slot-open" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
+                      Opening Time
+                    </label>
+                    <input
+                      id="slot-open"
+                      type="time"
+                      value={form.open}
+                      onChange={(e) => setForm({ ...form, open: e.target.value })}
+                      required
+                      style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label htmlFor="slot-close" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
+                      Closing Time
+                    </label>
+                    <input
+                      id="slot-close"
+                      type="time"
+                      value={form.close}
+                      onChange={(e) => setForm({ ...form, close: e.target.value })}
+                      required
+                      style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
+                    />
+                  </div>
+                </div>
+                <button type="submit" className="btn-primary" style={{ marginTop: "0.5rem" }}>
+                  Add Opening Slot
+                </button>
               </form>
-              <button onClick={handleLogout} style={{ marginBottom: "20px" }}>
-                Logout
-              </button>
             </div>
           ) : (
-            <div style={{ marginTop: "20px" }}>
-              <h3>Login to add a slot</h3>
-              <form onSubmit={handleLogin}>
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={loginForm.username}
-                  onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                  required
-                />
-                <button type="submit">Login</button>
+            <div className="login-form" style={{ marginTop: "3rem", maxWidth: "500px", marginLeft: "auto", marginRight: "auto" }}>
+              <h3 style={{ color: "#667eea", marginBottom: "0.5rem", textAlign: "center" }}>Login Required</h3>
+              <p style={{ color: "#718096", fontSize: "0.9rem", marginBottom: "2rem", textAlign: "center" }}>
+                Please login to add new opening slots
+              </p>
+              <form onSubmit={handleLogin} style={{ display: "grid", gap: "1.5rem" }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label htmlFor="username" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={loginForm.username}
+                    onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+                    required
+                    style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label htmlFor="password" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    required
+                    style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
+                  />
+                </div>
+                {loginError && <div className="error-message" style={{ padding: "0.75rem", background: "#fff5f5", border: "1px solid #fc8181", borderRadius: "6px", color: "#c53030", textAlign: "center" }}>{loginError}</div>}
+                <button type="submit" className="btn-primary">
+                  Login
+                </button>
               </form>
-              {loginError && <p style={{ color: "red" }}>{loginError}</p>}
             </div>
           )}
         </div>
