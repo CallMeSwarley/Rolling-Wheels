@@ -2,7 +2,7 @@
 session_start();
 
 // --- CORS HEADERS ---
-header('Access-Control-Allow-Origin: http://localhost:3000'); // comment out in production
+// header('Access-Control-Allow-Origin: http://localhost:3000'); // comment out in production
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Credentials: true');
@@ -62,17 +62,8 @@ if ($action === 'read_calendar') {
 function insertSlot($filePath, $newSlot, $minDurationMinutes = 120)
 {
     // Load existing JSON data
-    $jsonData = file_get_contents($filePath);
-    $slots = json_decode($jsonData, true);
+    $slots = json_decode(file_get_contents($filePath), true) ?: [];
 
-    if (!$slots) {
-        $slots = [];
-    }
-
-    // Filter slots for the same date
-    $daySlots = array_filter($slots, fn($slot) => $slot['date'] === $newSlot['date']);
-
-    // Convert times to timestamps for comparison
     $newStart = strtotime($newSlot['open']);
     $newEnd = strtotime($newSlot['close']);
 
@@ -81,38 +72,57 @@ function insertSlot($filePath, $newSlot, $minDurationMinutes = 120)
         return "Error: Slot duration is less than $minDurationMinutes minutes.";
     }
 
-    // Sort day slots by start time
+    // Get all slots on the same day
+    $daySlots = array_filter($slots, fn($slot) => $slot['date'] === $newSlot['date']);
+
+    // Sort by start time
     usort($daySlots, fn($a, $b) => strtotime($a['open']) - strtotime($b['open']));
 
-    // Check for overlaps and gaps
-    $prevEnd = null;
+    // Check for containment
     foreach ($daySlots as $slot) {
         $slotStart = strtotime($slot['open']);
         $slotEnd = strtotime($slot['close']);
 
-        // Overlap check
-        if ($newStart < $slotEnd && $newEnd > $slotStart) {
-            return "Error: Slot overlaps with existing slot from {$slot['open']} to {$slot['close']}.";
+        // Full containment check
+        if (($newStart <= $slotStart && $newEnd >= $slotEnd) || ($slotStart <= $newStart && $slotEnd >= $newEnd)) {
+            return "Error: Slot cannot fully contain or be fully contained by existing slot from {$slot['open']} to {$slot['close']}.";
         }
-
-        // Gap check: If prevEnd exists, new slot should start exactly at prevEnd
-        if ($prevEnd !== null && $newStart !== $prevEnd) {
-            return "Error: Slot must start immediately after previous slot at " . date('H:i', $prevEnd) . ".";
-        }
-
-        $prevEnd = $slotEnd;
     }
 
-    // Insert in correct chronological order
+    // Check back-to-back / gaps
+    if (!empty($daySlots)) {
+        // Find correct position to insert
+        $prevEnd = null;
+        foreach ($daySlots as $slot) {
+            $slotStart = strtotime($slot['open']);
+            $slotEnd = strtotime($slot['close']);
+
+            if ($prevEnd !== null && $newStart > $prevEnd && $newStart < $slotStart) {
+                return "Error: Slot must start immediately after previous slot at " . date('H:i', $prevEnd) . ".";
+            }
+
+            $prevEnd = max($prevEnd ?? 0, $slotEnd); // allow partial overlap extending prevEnd
+        }
+
+        // Check if inserting after last slot
+        $lastSlotEnd = strtotime(end($daySlots)['close']);
+        if ($newStart > $lastSlotEnd) {
+            return "Error: New slot must start immediately after last slot at " . date('H:i', $lastSlotEnd) . ".";
+        }
+    }
+
+    // Insert the new slot
     $slots[] = $newSlot;
+
+    // Sort all slots by date + start time
     usort($slots, fn($a, $b) => strtotime($a['date'] . ' ' . $a['open']) - strtotime($b['date'] . ' ' . $b['open']));
 
     // Save updated JSON
     file_put_contents($filePath, json_encode($slots, JSON_PRETTY_PRINT));
 
-    # should return new slot list
     return $slots;
 }
+
 
 // write actions, require admin auth (in future we need a "Platzwart" role for that)
 if ($action === 'add_slot') {

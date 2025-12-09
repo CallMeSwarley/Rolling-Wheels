@@ -48,10 +48,22 @@
         "platzwart": "maxi"
     },
     {
+        "date": "2025-12-14",
+        "open": "20:00",
+        "close": "22:00",
+        "platzwart": "aley"
+    },
+    {
         "date": "2025-12-16",
         "open": "12:00",
         "close": "14:01",
         "platzwart": "naaaa test"
+    },
+    {
+        "date": "2025-12-16",
+        "open": "14:00",
+        "close": "17:00",
+        "platzwart": "oha"
     },
     {
         "date": "2025-12-17",
@@ -64,5 +76,11 @@
         "open": "12:12",
         "close": "15:12",
         "platzwart": "aaaaa"
+    },
+    {
+        "date": "2025-12-25",
+        "open": "15:00",
+        "close": "17:00",
+        "platzwart": "top"
     }
 ]
