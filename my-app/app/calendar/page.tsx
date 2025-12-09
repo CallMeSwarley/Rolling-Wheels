@@ -1,16 +1,15 @@
 "use client";
 
-import data from '@/data/data.json';
 import { OpeningSlot } from '@/types';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import deLocale from '@fullcalendar/core/locales/de';
-import { Calendar } from '@fullcalendar/core';
 
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false });
-
+const devMode = true; // Set to false for production
 const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
   // Sort slots by date and start time
   const sorted = [...slots].sort((a, b) => {
@@ -71,32 +70,31 @@ const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
 
 
 async function addSlot(newSlot: OpeningSlot) {
-  // const res = await fetch('http://localhost:1234/file-api.php', {
-  const res = await fetch('/php_spielerei/file-api.php', { // for production
+  const apiUrl = devMode ? 'http://localhost:1234/file-api.php' : '/php_spielerei/file-api.php';
+  const res = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({ action: 'add_slot', newSlot: newSlot })
   });
-  console.log('Response from file-api.php (add_slot):', res);
   return await res.json();
 }
 
 async function loadCalendar() {
-  // const res = await fetch('http://localhost:1234/file-api.php', {
-  const res = await fetch('/php_spielerei/file-api.php', { // for production
+  const apiUrl = devMode ? 'http://localhost:1234/file-api.php' : '/php_spielerei/file-api.php';
+  const res = await fetch(apiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({ action: 'read_calendar' })
   });
-  console.log('Response from file-api.php:', res);
   return await res.json();
 }
 
 
 export default function CalendarPage() {
   // const openingHours: OpeningSlot[] = data.openingHours;
+
   const [slots, setSlots] = useState<OpeningSlot[]>();
   const [loggedIn, setLoggedIn] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -115,10 +113,8 @@ export default function CalendarPage() {
   // Load on mount
   useEffect(() => {
     loadCalendar().then(data => {
-      console.log('Received data:', data);
       if (data.success) {
         const receivedSlots = JSON.parse(data.content);
-        console.log('Parsed slots:', receivedSlots);
         setSlots(receivedSlots);
       } else {
         console.error("Error loading calendar data:", data.error || 'Fehler beim Laden der Daten.');
@@ -128,7 +124,14 @@ export default function CalendarPage() {
     });
   }, []);
   useEffect(() => { // check if we are logged in
-    fetch('/php_spielerei/check_session.php', { credentials: 'include' })
+    if (devMode) {
+      setLoggedIn(true);
+      setRoles(['admin']);
+      return;
+    }
+
+    const apiUrl = devMode ? 'http://localhost:1234/check_session.php' : '/php_spielerei/check_session.php';
+    fetch(apiUrl, { credentials: 'include' })
       .then(res => {
         if (res.status === 200) return res.json();
         throw new Error("Not logged in");
@@ -140,13 +143,14 @@ export default function CalendarPage() {
       .catch(() => {
         setLoggedIn(false);
       });
-  }, []);
+  }, [devMode]);
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
 
+    const apiUrl = devMode ? 'http://localhost:1234/login.php' : '/php_spielerei/login.php';
     try {
-      const res = await fetch("/php_spielerei/login.php", {
+      const res = await fetch(apiUrl, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -167,8 +171,9 @@ export default function CalendarPage() {
     }
   };
   const handleLogout = async () => {
+    const apiUrl = devMode ? 'http://localhost:1234/logout.php' : '/php_spielerei/logout.php';
     try {
-      const res = await fetch("/php_spielerei/logout.php", {
+      const res = await fetch(apiUrl, {
         method: "POST",
         credentials: "include",
       });
@@ -182,13 +187,37 @@ export default function CalendarPage() {
       console.error("Logout failed", err);
     }
   };
+  const handleDateSelect = (selectInfo: any) => {
+    const { startStr, endStr, allDay } = selectInfo;
+
+    if (!loggedIn || (!roles.includes('admin') && !roles.includes('platzwart'))) return;
+
+    // Extract date
+    const date = startStr.split('T')[0];
+
+    // Extract time in HH:mm format, or leave blank for all-day events
+    const formatTime = (dateTimeStr: string) => {
+      if (!dateTimeStr.includes('T')) return '';
+      return dateTimeStr.split('T')[1].substring(0, 5); // "HH:mm"
+    };
+
+    setForm({
+      ...form,
+      date,
+      open: allDay ? '' : formatTime(startStr),
+      close: allDay ? '' : formatTime(endStr)
+    });
+
+    // Scroll to form
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.date || !form.open || !form.close) return;
 
     // Call async function
     const result = await addSlot(form);
-    console.log("Result:", result);
 
     if (!result.success) {
       alert("Error adding slot: " + (result.error || 'Unbekannter Fehler'));
@@ -207,12 +236,65 @@ export default function CalendarPage() {
       <div className="page-content full-width">
         <div className="calendar">
           <h2>Opening Hours</h2>
+          {loggedIn && (roles.includes('admin') || roles.includes('platzwart')) && (
+            <div style={{
+              background: "#f0f9ff",
+              border: "1px solid #bae6fd",
+              borderRadius: "6px",
+              padding: "0.75rem 1rem",
+              marginBottom: "1rem",
+              color: "#0c4a6e",
+              fontSize: "0.9rem"
+            }}>
+              💡 <strong>Tip:</strong> In week view, click and drag to select your desired time slot (minimum 2 hours). To add overlapping entries, click in the empty space next to existing events (clicking on events won't work). You can also click on a date (in month view) to fill in the form manually.
+              {devMode && <span style={{ marginLeft: "1rem", color: "#dc2626", fontWeight: "bold" }}>[DEV MODE]</span>}
+            </div>
+          )}
           <div>
             <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin]}
-              initialView="dayGridMonth"
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView="timeGridWeek"
+              slotMinTime="08:00:00"   // earliest hour shown (8 AM)
+              slotMaxTime="23:30:00"   // latest hour shown (11:30 PM)
+              locale={deLocale}
               events={events}
               height="auto"
+              selectable={loggedIn && (roles.includes('admin') || roles.includes('platzwart'))}
+              selectMirror={true}
+              dayMaxEvents={true}
+              weekends={true}
+              select={handleDateSelect}
+              selectAllow={(selectInfo) => {
+                const startDate = selectInfo.start;
+                const endDate = selectInfo.end;
+                // 1. Minimum 2 hours
+                const diffHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+                return diffHours >= 2 ;
+              }}
+              eventOverlap={true}
+              eventDidMount={(info) => {
+                info.el.style.width = '85%';         // make the event narrower
+                info.el.style.boxSizing = 'border-box';
+              }}
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek' //,timeGridDay
+              }}
+              buttonText={{
+                today: 'Heute',
+                month: 'Monat',
+                week: 'Woche',
+                day: 'Tag'
+              }}
+              validRange={{
+                start: new Date().toISOString().split('T')[0]
+              }}
+              selectConstraint={{
+                start: new Date().toISOString().split('T')[0],
+                startTime: '08:00:00',
+                endTime: '23:30:00',
+              }}
               eventContent={(arg) => (
                 <div style={{ fontSize: "12px", lineHeight: "1.2" }}>
                   <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}><b>{arg.event.title.split('&')[0]}</b></div>
@@ -221,6 +303,8 @@ export default function CalendarPage() {
                   </div>
                 </div>
               )}
+              eventColor="#667eea"
+              eventTextColor="#ffffff"
             />
           </div>
           {loggedIn && (roles.includes('admin') || roles.includes('platzwart')) ? (
@@ -229,7 +313,7 @@ export default function CalendarPage() {
                 <div>
                   <h3 style={{ color: "#667eea", marginBottom: "0.5rem" }}>Add New Opening Slot</h3>
                   <p style={{ color: "#718096", fontSize: "0.9rem", marginBottom: "1rem" }}>
-                    Minimum duration: 120 minutes. You can extend existing sessions by adding overlapping slots.
+                    Minimum duration: 2 hours. You can extend existing sessions by adding overlapping slots or adjacent slots.
                   </p>
                 </div>
                 <button onClick={handleLogout} className="btn-logout">

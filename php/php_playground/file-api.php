@@ -2,7 +2,7 @@
 session_start();
 
 // --- CORS HEADERS ---
-// header('Access-Control-Allow-Origin: http://localhost:3000'); // comment out in production
+header('Access-Control-Allow-Origin: http://localhost:3000'); // comment out in production
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Credentials: true');
@@ -174,6 +174,13 @@ if ($action === 'add_slot') {
         exit;
     }
 
+    // Validate that opening time is before closing time
+    $openTime = strtotime($newSlot['open']);
+    $closeTime = strtotime($newSlot['close']);
+    if ($openTime >= $closeTime) {
+        echo json_encode(['success' => false, 'error' => 'Opening time must be before closing time']);
+        exit;
+    }
 
     // All validations passed, insert the slot
     $new_slots = insertSlot($calendarfilePath, $newSlot);

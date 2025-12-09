@@ -12,10 +12,28 @@
         "platzwart": "Hans Meier"
     },
     {
+        "date": "2025-12-09",
+        "open": "11:00",
+        "close": "20:30",
+        "platzwart": "maxi_test"
+    },
+    {
+        "date": "2025-12-09",
+        "open": "19:00",
+        "close": "23:30",
+        "platzwart": "maxi_test"
+    },
+    {
         "open": "09:00",
         "close": "18:00",
         "date": "2025-12-10",
         "platzwart": "Hans Meier"
+    },
+    {
+        "date": "2025-12-10",
+        "open": "16:30",
+        "close": "18:30",
+        "platzwart": "maxi_test"
     },
     {
         "open": "09:00",
@@ -24,10 +42,34 @@
         "platzwart": "Hans Meier"
     },
     {
+        "date": "2025-12-11",
+        "open": "12:30",
+        "close": "18:30",
+        "platzwart": "maxi_test"
+    },
+    {
+        "date": "2025-12-11",
+        "open": "16:30",
+        "close": "21:30",
+        "platzwart": "maxi_test"
+    },
+    {
         "open": "09:00",
         "close": "20:00",
         "date": "2025-12-12",
         "platzwart": "Hans Meier"
+    },
+    {
+        "date": "2025-12-12",
+        "open": "19:30",
+        "close": "23:59",
+        "platzwart": "maxi_test"
+    },
+    {
+        "date": "2025-12-13",
+        "open": "08:30",
+        "close": "12:30",
+        "platzwart": "maxi_test"
     },
     {
         "open": "12:00",
