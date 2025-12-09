@@ -42,7 +42,7 @@ const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
       const last = currentGroup[currentGroup.length - 1];
       const platzwarts = currentGroup.map(s => s.platzwart).join(", ");
       events.push({
-        title: `${first.open} - ${last.close} &(${platzwarts})`,
+        title: `${first.open} - ${last.close} &(${platzwarts})`, // TODO to each platzwart add their end hour: maxi->10:00, teste->13:00
         start: `${first.date}T${first.open}`,
         end: `${last.date}T${last.close}`
       });
