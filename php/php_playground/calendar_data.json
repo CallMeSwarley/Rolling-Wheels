@@ -1,39 +1,68 @@
-{
-  "openingHours": [
+[
     {
-      "open": "09:00",
-      "close": "18:00",
-      "date": "08-12-2025"
+        "open": "09:00",
+        "close": "18:00",
+        "date": "2025-12-08",
+        "platzwart": "Hans Meier"
     },
     {
-      "open": "09:00",
-      "close": "18:00",
-      "date": "09-12-2025"
+        "open": "09:00",
+        "close": "18:00",
+        "date": "2025-12-09",
+        "platzwart": "Hans Meier"
     },
     {
-      "open": "09:00",
-      "close": "18:00",
-      "date": "10-12-2025"
+        "open": "09:00",
+        "close": "18:00",
+        "date": "2025-12-10",
+        "platzwart": "Hans Meier"
     },
     {
-      "open": "09:00",
-      "close": "18:00",
-      "date": "11-12-2025"
+        "open": "09:00",
+        "close": "18:00",
+        "date": "2025-12-11",
+        "platzwart": "Hans Meier"
     },
     {
-      "open": "09:00",
-      "close": "20:00",
-      "date": "12-12-2025"
+        "open": "09:00",
+        "close": "20:00",
+        "date": "2025-12-12",
+        "platzwart": "Hans Meier"
     },
     {
-      "open": "12:00",
-      "close": "16:00",
-      "date": "13-12-2025"
+        "open": "12:00",
+        "close": "16:00",
+        "date": "2025-12-13",
+        "platzwart": "Hans Meier"
     },
     {
-      "open": "12:00",
-      "close": "17:00",
-      "date": "14-12-2025"
+        "open": "12:00",
+        "close": "17:00",
+        "date": "2025-12-14",
+        "platzwart": "Hans Meier"
+    },
+    {
+        "date": "2025-12-14",
+        "open": "17:00",
+        "close": "20:25",
+        "platzwart": "maxi"
+    },
+    {
+        "date": "2025-12-16",
+        "open": "12:00",
+        "close": "14:01",
+        "platzwart": "naaaa test"
+    },
+    {
+        "date": "2025-12-17",
+        "open": "04:22",
+        "close": "19:22",
+        "platzwart": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+        "date": "2025-12-25",
+        "open": "12:12",
+        "close": "15:12",
+        "platzwart": "aaaaa"
     }
-  ]
-}
+]

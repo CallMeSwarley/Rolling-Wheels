@@ -3,7 +3,7 @@
 import data from '@/data/data.json';
 import { OpeningSlot } from '@/types';
 import dynamic from 'next/dynamic';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 
@@ -59,16 +59,84 @@ const mergeAdjacentSlots = (slots: OpeningSlot[]) => {
   return events;
 };
 
-export default function CalendarPage() {
-  const openingHours: OpeningSlot[] = data.openingHours;
-  const calendarRef = useRef(null);
+async function addSlot(newSlot: OpeningSlot) {
+  const res = await fetch('http://localhost:1234/file-api.php', {
+    // const res = await fetch('/php_spielerei/file-api.php', { // for production
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ action: 'add_slot', newSlot: newSlot })
+  });
+  console.log('Response from file-api.php (add_slot):', res);
+  return await res.json();
+}
 
+async function loadCalendar() {
+  const res = await fetch('http://localhost:1234/file-api.php', {
+    // const res = await fetch('/php_spielerei/file-api.php', { // for production
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ action: 'read_calendar' })
+  });
+  console.log('Response from file-api.php:', res);
+  return await res.json();
+}
+
+
+
+
+export default function CalendarPage() {
+  // const openingHours: OpeningSlot[] = data.openingHours;
+  const [slots, setSlots] = useState<OpeningSlot[]>();
+
+  const calendarRef = useRef(null);
+  // Form state
+  const [form, setForm] = useState<OpeningSlot>({
+    date: "",
+    open: "",
+    close: "",
+    platzwart: "",
+  });
+  // Load on mount
+  useEffect(() => {
+    loadCalendar().then(data => {
+      console.log('Received data:', data);
+      if (data.success) {
+        const receivedSlots = JSON.parse(data.content);
+        console.log('Parsed slots:', receivedSlots);
+        setSlots(receivedSlots);
+      } else {
+        console.error("Error loading calendar data:", data.error || 'Fehler beim Laden der Daten.');
+      }
+    }).catch(error => {
+      console.error('Error loading data:', error);
+    });
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.date || !form.open || !form.close || !form.platzwart) return;
+
+    // Call async function
+    const result = await addSlot(form);
+    console.log("Result:", result);
+
+    if (!result.success) {
+      alert("Error adding slot: " + (result.error || 'Unbekannter Fehler'));
+      return;
+    }
+    setSlots(result.slots);
+
+    // Reset form
+    setForm({ date: "", open: "", close: "", platzwart: "" });
+  };
   // const events = data.openingHours.map((slot) => ({
   //   title: `${slot.open} - ${slot.close}&(${slot.platzwart})`,
   //   start: `${slot.date}T${slot.open}`,
   //   end: `${slot.date}T${slot.close}`
   // }));
-  const events = mergeAdjacentSlots(openingHours);
+  const events = mergeAdjacentSlots(slots || []);
 
   return (
     <div className="main-content">
@@ -95,7 +163,7 @@ export default function CalendarPage() {
               height="auto"
               eventContent={(arg) => (
                 <div style={{ fontSize: "12px", lineHeight: "1.2" }}>
-                  <div><b>{arg.event.title.split('&')[0]}</b></div>
+                  <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}><b>{arg.event.title.split('&')[0]}</b></div>
                   <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
                     {arg.event.title.split('&')[1]}
                   </div>
@@ -103,8 +171,41 @@ export default function CalendarPage() {
               )}
             />
           </div>
+          <h3>Add New Slot</h3>
+          <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
+            <input
+              type="date"
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              required
+              min={new Date().toISOString().split("T")[0]} // today or later
+            />
+            <input
+              type="time"
+              value={form.open}
+              onChange={(e) => setForm({ ...form, open: e.target.value })}
+              required
+            />
+            <input
+              type="time"
+              value={form.close}
+              onChange={(e) => setForm({ ...form, close: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Platzwart"
+              value={form.platzwart}
+              onChange={(e) => setForm({ ...form, platzwart: e.target.value })}
+              required
+              pattern="[A-Za-z\s]+"
+              maxLength={30}
+            />
+            <button type="submit">Add Slot</button>
+          </form>
         </div>
       </div>
     </div>
+
   );
 }
