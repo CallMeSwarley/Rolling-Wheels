@@ -93,7 +93,7 @@ function insertSlot($filePath, $newSlot, $minDurationMinutes = 120)
     // Sort by start time
     usort($daySlots, fn($a, $b) => strtotime($a['open']) - strtotime($b['open']));
 
-    // Check for containment
+    // Check for containment by single slot
     foreach ($daySlots as $slot) {
         $slotStart = strtotime($slot['open']);
         $slotEnd = strtotime($slot['close']);
@@ -101,6 +101,38 @@ function insertSlot($filePath, $newSlot, $minDurationMinutes = 120)
         // Full containment check
         if (($newStart <= $slotStart && $newEnd >= $slotEnd) || ($slotStart <= $newStart && $slotEnd >= $newEnd)) {
             return "Error: Slot cannot fully contain or be fully contained by existing slot from {$slot['open']} to {$slot['close']}.";
+        }
+    }
+
+    // Check if new slot is enclosed by multiple overlapping/adjacent slots
+    if (!empty($daySlots)) {
+        // Build merged ranges from existing slots
+        $mergedRanges = [];
+        foreach ($daySlots as $slot) {
+            $slotStart = strtotime($slot['open']);
+            $slotEnd = strtotime($slot['close']);
+            
+            if (empty($mergedRanges)) {
+                $mergedRanges[] = ['start' => $slotStart, 'end' => $slotEnd];
+                continue;
+            }
+            
+            $lastRange = &$mergedRanges[count($mergedRanges) - 1];
+            
+            // If adjacent or overlapping, merge
+            if ($slotStart <= $lastRange['end']) {
+                $lastRange['end'] = max($lastRange['end'], $slotEnd);
+            } else {
+                // New separate range
+                $mergedRanges[] = ['start' => $slotStart, 'end' => $slotEnd];
+            }
+        }
+        
+        // Check if new slot is fully enclosed by any merged range
+        foreach ($mergedRanges as $range) {
+            if ($newStart >= $range['start'] && $newEnd <= $range['end']) {
+                return "Error: Slot is fully enclosed by existing overlapping/adjacent slots from " . date('H:i', $range['start']) . " to " . date('H:i', $range['end']) . ".";
+            }
         }
     }
 

@@ -10,7 +10,8 @@ import listPlugin from '@fullcalendar/list';
 import deLocale from '@fullcalendar/core/locales/de';
 
 const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false });
-const devMode = false; // Set to false for production
+const devMode = process.env.NODE_ENV !== 'production';//true; // Set to false for production
+console.log("Dev mode:", devMode);
 const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
   // Sort slots by date and start time
   const sorted = [...slots].sort((a, b) => {
@@ -240,7 +241,6 @@ export default function CalendarPage() {
     <div className="main-content">
       <div className="page-content full-width">
         <div className="calendar">
-          <h2>Opening Hours</h2>
           {loggedIn && (roles.includes('admin') || roles.includes('platzwart')) && (
             <div style={{
               background: "#f0f9ff",
@@ -261,7 +261,7 @@ export default function CalendarPage() {
           }}>
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-              initialView={smallScreen ? "listWeek" : "dayGridMonth"}
+              initialView={smallScreen ? "listMonth" : "dayGridMonth"}
               slotMinTime="08:00:00"   // earliest hour shown (8 AM)
               slotMaxTime="23:30:00"   // latest hour shown (11:30 PM)
               allDaySlot={false}
@@ -295,8 +295,8 @@ export default function CalendarPage() {
               eventOverlap={true}
               headerToolbar={
                 smallScreen
-                  ? { left: 'prev next', center: 'title', right: 'dayGridMonth timeGridWeek listWeek' }
-                  : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' }
+                  ? { left: 'prev next', center: 'title', right: 'dayGridMonth timeGridWeek listMonth' }
+                  : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' }
               }
               eventDidMount={(info) => {
                 info.el.style.width = '85%';         // make the event narrower
@@ -392,44 +392,60 @@ export default function CalendarPage() {
             </div>
           ) : (
             <div className="login-form" style={{ marginTop: "3rem", maxWidth: "500px", marginLeft: "auto", marginRight: "auto" }}>
-              <h3 style={{ color: "#dc2626", marginBottom: "0.5rem", textAlign: "center" }}>Login Required</h3>
-              <p style={{ color: "#718096", fontSize: "0.9rem", marginBottom: "2rem", textAlign: "center" }}>
-                Please login to add new opening slots
-              </p>
-              <form onSubmit={handleLogin} style={{ display: "grid", gap: "1.5rem" }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label htmlFor="username" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
-                    Username
-                  </label>
-                  <input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username"
-                    value={loginForm.username}
-                    onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                    required
-                    style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
-                  />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label htmlFor="password" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={loginForm.password}
-                    onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    required
-                    style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
-                  />
-                </div>
-                {loginError && <div className="error-message" style={{ padding: "0.75rem", background: "#fff5f5", border: "1px solid #fc8181", borderRadius: "6px", color: "#c53030", textAlign: "center" }}>{loginError}</div>}
-                <button type="submit" className="btn-primary">
-                  Login
-                </button>
-              </form>
+              <details style={{ cursor: "pointer" }}>
+                <summary
+                  style={{
+                    fontWeight: "600",
+                    color: "#2d3748",
+                    fontSize: "1rem",
+                    marginBottom: "1rem",
+                    cursor: "pointer",
+                    padding: "1rem",
+                    transition: "background 0.2s",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "6px",
+                    background: "#f8f9fa",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#fee2e2")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#f8f9fa")}
+                >
+                  🔒 Admin/Platzwart Login Required to Add Slots
+                </summary>
+                <form onSubmit={handleLogin} style={{ display: "grid", gap: "1.5rem" }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label htmlFor="username" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
+                      Username
+                    </label>
+                    <input
+                      id="username"
+                      type="text"
+                      placeholder="Enter your username"
+                      value={loginForm.username}
+                      onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
+                      required
+                      style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label htmlFor="password" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "500", color: "#2d3748" }}>
+                      Password
+                    </label>
+                    <input
+                      id="password"
+                      type="password"
+                      placeholder="Enter your password"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                      required
+                      style={{ width: "100%", padding: "0.8rem", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "1rem" }}
+                    />
+                  </div>
+                  {loginError && <div className="error-message" style={{ padding: "0.75rem", background: "#fff5f5", border: "1px solid #fc8181", borderRadius: "6px", color: "#c53030", textAlign: "center" }}>{loginError}</div>}
+                  <button type="submit" className="btn-primary">
+                    Login
+                  </button>
+                </form>
+              </details>
             </div>
           )}
         </div>

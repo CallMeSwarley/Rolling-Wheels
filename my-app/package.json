@@ -16,8 +16,8 @@
     "@fullcalendar/timegrid": "^6.1.19",
     "he": "^1.2.0",
     "next": "16.0.7",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
