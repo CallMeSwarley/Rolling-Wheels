@@ -1,0 +1,12 @@
+# Deny access over http to our user data files
+<FilesMatch "\.(xml|txt)$">
+    Require all denied
+</FilesMatch>
+
+# Allow PHP scripts to be accessed normally
+<FilesMatch "\.php$">
+    Require all granted
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes

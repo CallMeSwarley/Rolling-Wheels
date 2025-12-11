@@ -59,45 +59,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // ------------------------
     // Respond based on request type
     // ------------------------
+    header('Content-Type: application/json');
+    
     if ($login_successful) {
-        // If it's a JSON request (API)
-        if (!empty($input)) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                "success" => true,
-                "username" => $_SESSION['username'],
-                "roles" => $_SESSION['roles']
-            ]);
-            exit;
-        }
-
-        // Otherwise, redirect for normal form login
-        header("Location: hello.php");
-        exit;
+        echo json_encode([
+            "success" => true,
+            "username" => $_SESSION['username'],
+            "roles" => $_SESSION['roles']
+        ]);
     } else {
-        $error = "Invalid username or password.";
-
-        // JSON response for API
-        if (!empty($input)) {
-            header('Content-Type: application/json', true, 401);
-            echo json_encode(["error" => $error]);
-            exit;
-        }
+        http_response_code(401);
+        echo json_encode(["error" => "Invalid username or password."]);
     }
+    exit;
 }
-?>
 
-<!-- ------------------------
-     HTML login form
-     ------------------------ -->
-<?php if (empty($_SERVER['HTTP_X_REQUESTED_WITH'])): ?>
-<form method="POST">
-    <input type="text" name="username" placeholder="Username" required><br>
-    <input type="password" name="password" placeholder="Password" required><br>
-    <button type="submit">Login</button>
-</form>
-
-<?php if (!empty($error)): ?>
-<p style="color:red;"><?php echo htmlspecialchars($error); ?></p>
-<?php endif; ?>
-<?php endif; ?>
+// Only accept POST requests
+http_response_code(405);
+header('Content-Type: application/json');
+echo json_encode(["error" => "Method not allowed. Only POST requests are accepted."]);
+exit;
