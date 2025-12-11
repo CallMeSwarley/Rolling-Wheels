@@ -20,16 +20,16 @@ export default function Header() {
           <Link href="/" className={pathname === '/' ? 'active' : ''}>
             Home
           </Link>
-          <Link href="/waswannwo" className={pathname === '/waswannwo' ? 'active' : ''}>
+          <Link href="/waswannwo" className={pathname === '/waswannwo/' ? 'active' : ''}>
             Was Wann Wo
           </Link>
-          <Link href="/calendar" className={pathname === '/calendar' ? 'active' : ''}>
+          <Link href="/calendar" className={pathname === '/calendar/' ? 'active' : ''}>
             Calendar
           </Link>
-          <Link href="/downloads" className={pathname === '/downloads' ? 'active' : ''}>
+          <Link href="/downloads" className={pathname === '/downloads/' ? 'active' : ''}>
             Downloads
           </Link>
-          <Link href="/cms" className={pathname === '/cms' ? 'active' : ''}>
+          <Link href="/cms" className={pathname === '/cms/' ? 'active' : ''}>
             CMS
           </Link>
         </nav>

@@ -8,17 +8,25 @@ export default function Home() {
       <div className="with-sidebar">
         <SideMenu />
         <main className="page-content">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'row',
+            alignItems: 'flex-start', 
+            gap: '1.5rem', 
+            marginBottom: '2rem',
+            flexWrap: 'wrap'
+          }}>
             <Image
               src="/logo.png"
               alt="Rolling Wheels Logo"
               width={200}
               height={280}
-              style={{ borderRadius: '6px' }}
+              style={{ borderRadius: '6px', flexShrink: 0 }}
             />
-            <div>
+            <div style={{ flex: '1', minWidth: '280px' }}>
               <h2 style={{ marginBottom: '0.5rem' }}>Welcome to Rolling Wheels</h2>
-              <p style={{ fontSize: '0.95rem', color: '#dc2626', fontWeight: '500' }}>SV Lohhof - Ihr Rollsportverein</p>          <p style={{ marginTop: '1rem', lineHeight: '1.8', color: '#4a5568' }}>
+              <p style={{ fontSize: '0.95rem', color: '#dc2626', fontWeight: '500', marginBottom: '1rem' }}>SV Lohhof - Ihr Rollsportverein</p>
+              <p style={{ lineHeight: '1.8', color: '#4a5568' }}>
                 Welcome to SV Lohhof Rolling Wheels! We are a vibrant community sports
                 organization dedicated to promoting active lifestyles, teamwork, and
                 community spirit. Our facilities offer state-of-the-art equipment and
