@@ -13,6 +13,18 @@ $error = '';
 $login_successful = false;
 
 // ------------------------
+// Handle OPTIONS request (CORS preflight)
+// ------------------------
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    header("Access-Control-Allow-Origin: http://localhost:3000");
+    header("Access-Control-Allow-Methods: POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type");
+    header("Access-Control-Allow-Credentials: true");
+    http_response_code(200);
+    exit;
+}
+
+// ------------------------
 // Handle POST request
 // ------------------------
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -59,6 +71,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // ------------------------
     // Respond based on request type
     // ------------------------
+    header("Access-Control-Allow-Origin: http://localhost:3000");
+    header("Access-Control-Allow-Credentials: true");
     header('Content-Type: application/json');
     
     if ($login_successful) {

@@ -70,6 +70,175 @@ const mergeAdjacentOrOverlappingSlots = (slots: OpeningSlot[]) => {
 
   return events;
 };
+async function testConcurrentSlots() {
+  console.log("\n🧪 ===== STARTING CONCURRENT SLOT TESTS =====\n");
+
+  // Test 1: Valid concurrent slots (should both succeed)
+  console.log("📋 TEST 1: Valid concurrent slots");
+  const validSlot1: OpeningSlot = {
+    date: "2025-12-20",
+    open: "10:00",
+    close: "12:00",
+    platzwart: "",
+  };
+  const validSlot2: OpeningSlot = {
+    date: "2025-12-20",
+    open: "12:00",
+    close: "14:00",
+    platzwart: "",
+  };
+  const results1 = await Promise.all([addSlot(validSlot1), addSlot(validSlot2)]);
+  console.log("✅ Slot 10:00-12:00:", results1[0].success ? "SUCCESS" : `FAILED: ${results1[0].error}`);
+  console.log("✅ Slot 12:00-14:00:", results1[1].success ? "SUCCESS" : `FAILED: ${results1[1].error}`);
+
+  // Test 2: Overlapping slots (one should succeed, one should fail)
+  console.log("\n📋 TEST 2: Overlapping slots (containment check)");
+  const overlapSlot1: OpeningSlot = {
+    date: "2025-12-21",
+    open: "10:00",
+    close: "14:00",
+    platzwart: "",
+  };
+  const overlapSlot2: OpeningSlot = {
+    date: "2025-12-21",
+    open: "11:00",
+    close: "13:00",
+    platzwart: "",
+  };
+  const results2 = await Promise.all([addSlot(overlapSlot1), addSlot(overlapSlot2)]);
+  console.log("🔄 Slot 10:00-14:00:", results2[0].success ? "SUCCESS" : `FAILED: ${results2[0].error}`);
+  console.log("🔄 Slot 11:00-13:00:", results2[1].success ? "SUCCESS" : `FAILED: ${results2[1].error}`);
+
+  // Test 3: Invalid time format (should be rejected)
+  console.log("\n📋 TEST 3: Invalid time format");
+  const invalidTime: OpeningSlot = {
+    date: "2025-12-22",
+    open: "25:00",
+    close: "26:00",
+    platzwart: "",
+  };
+  const results3 = await addSlot(invalidTime);
+  console.log("❌ Invalid time 25:00-26:00:", results3.success ? "SUCCESS (unexpected!)" : `REJECTED: ${results3.error}`);
+
+  // Test 4: Slot too short (< 2 hours)
+  console.log("\n📋 TEST 4: Slot duration too short");
+  const shortSlot: OpeningSlot = {
+    date: "2025-12-23",
+    open: "10:00",
+    close: "11:00",
+    platzwart: "",
+  };
+  const results4 = await addSlot(shortSlot);
+  console.log("❌ Short slot 10:00-11:00 (1 hour):", results4.success ? "SUCCESS (unexpected!)" : `REJECTED: ${results4.error}`);
+
+  // Test 5: Invalid date format
+  console.log("\n📋 TEST 5: Invalid date format");
+  const invalidDate: OpeningSlot = {
+    date: "2025-13-45",
+    open: "10:00",
+    close: "12:00",
+    platzwart: "",
+  };
+  const results5 = await addSlot(invalidDate);
+  console.log("❌ Invalid date 2025-13-45:", results5.success ? "SUCCESS (unexpected!)" : `REJECTED: ${results5.error}`);
+
+  // Test 6: Opening time after closing time
+  console.log("\n📋 TEST 6: Opening time after closing time");
+  const reversedTime: OpeningSlot = {
+    date: "2025-12-24",
+    open: "15:00",
+    close: "10:00",
+    platzwart: "",
+  };
+  const results6 = await addSlot(reversedTime);
+  console.log("❌ Reversed times 15:00-10:00:", results6.success ? "SUCCESS (unexpected!)" : `REJECTED: ${results6.error}`);
+
+  // Test 7: Gap check - slot with gap after existing slot
+  console.log("\n📋 TEST 7: Gap check - slot after existing with gap");
+  const gapBase: OpeningSlot = {
+    date: "2025-12-25",
+    open: "10:00",
+    close: "12:00",
+    platzwart: "",
+  };
+  const gapSlot: OpeningSlot = {
+    date: "2025-12-25",
+    open: "14:00",
+    close: "16:00",
+    platzwart: "",
+  };
+  const results7Base = await addSlot(gapBase);
+  console.log("🔄 Base slot 10:00-12:00:", results7Base.success ? "SUCCESS" : `FAILED: ${results7Base.error}`);
+  const results7Gap = await addSlot(gapSlot);
+  console.log("❌ Gap slot 14:00-16:00:", results7Gap.success ? "SUCCESS (unexpected!)" : `REJECTED: ${results7Gap.error}`);
+
+  // Test 8: Gap check - slot before existing with gap
+  console.log("\n📋 TEST 8: Gap check - slot before existing with gap");
+  const gapBase2: OpeningSlot = {
+    date: "2025-12-26",
+    open: "14:00",
+    close: "16:00",
+    platzwart: "",
+  };
+  const gapSlotBefore: OpeningSlot = {
+    date: "2025-12-26",
+    open: "10:00",
+    close: "12:00",
+    platzwart: "",
+  };
+  const results8Base = await addSlot(gapBase2);
+  console.log("🔄 Base slot 14:00-16:00:", results8Base.success ? "SUCCESS" : `FAILED: ${results8Base.error}`);
+  const results8Gap = await addSlot(gapSlotBefore);
+  console.log("❌ Gap slot before 10:00-12:00:", results8Gap.success ? "SUCCESS (unexpected!)" : `REJECTED: ${results8Gap.error}`);
+
+  // Test 9: Valid extension (adjacent/overlapping allowed)
+  console.log("\n📋 TEST 9: Valid slot extension (adjacent)");
+  const extendBase: OpeningSlot = {
+    date: "2025-12-27",
+    open: "10:00",
+    close: "12:00",
+    platzwart: "",
+  };
+  const extendSlot: OpeningSlot = {
+    date: "2025-12-27",
+    open: "12:00",
+    close: "14:00",
+    platzwart: "",
+  };
+  const results9Base = await addSlot(extendBase);
+  console.log("✅ Base slot 10:00-12:00:", results9Base.success ? "SUCCESS" : `FAILED: ${results9Base.error}`);
+  const results9Extend = await addSlot(extendSlot);
+  console.log("✅ Adjacent slot 12:00-14:00:", results9Extend.success ? "SUCCESS" : `FAILED: ${results9Extend.error}`);
+
+  // Test 10: Merged range enclosure check
+  console.log("\n📋 TEST 10: Merged range enclosure (slot enclosed by multiple overlapping slots)");
+  const mergeSlot1: OpeningSlot = {
+    date: "2025-12-28",
+    open: "10:00",
+    close: "13:00",
+    platzwart: "",
+  };
+  const mergeSlot2: OpeningSlot = {
+    date: "2025-12-28",
+    open: "12:00",
+    close: "15:00",
+    platzwart: "",
+  };
+  const enclosedSlot: OpeningSlot = {
+    date: "2025-12-28",
+    open: "11:00",
+    close: "14:00",
+    platzwart: "",
+  };
+  const results10a = await addSlot(mergeSlot1);
+  console.log("🔄 Slot 1: 10:00-13:00:", results10a.success ? "SUCCESS" : `FAILED: ${results10a.error}`);
+  const results10b = await addSlot(mergeSlot2);
+  console.log("🔄 Slot 2: 12:00-15:00:", results10b.success ? "SUCCESS" : `FAILED: ${results10b.error}`);
+  const results10c = await addSlot(enclosedSlot);
+  console.log("❌ Enclosed slot 11:00-14:00:", results10c.success ? "SUCCESS (unexpected!)" : `REJECTED: ${results10c.error}`);
+
+  console.log("\n✅ ===== ALL TESTS COMPLETED =====\n");
+}
 
 
 async function addSlot(newSlot: OpeningSlot) {
@@ -193,7 +362,6 @@ export default function CalendarPage() {
     }
   };
   const handleDateSelect = (selectInfo: any) => {
-    console.log('Date selected:', selectInfo);
     const { startStr, endStr, allDay } = selectInfo;
 
     if (!loggedIn || (!roles.includes('admin') && !roles.includes('platzwart') && !roles.includes('dev'))) return;
@@ -222,18 +390,26 @@ export default function CalendarPage() {
     e.preventDefault();
     if (!form.date || !form.open || !form.close) return;
 
-    // Call async function
-    const result = await addSlot(form);
+    try {
+      const result = await addSlot(form);
 
-    if (!result.success) {
-      alert("Error adding slot: " + (result.error || 'Unbekannter Fehler'));
-      return;
+      // Always update slots if they exist
+      if (result.slots) {
+        setSlots(result.slots);
+      }
+
+      if (!result.success) {
+        alert("Error adding slot: " + (result.error || "Unbekannter Fehler"));
+        return;
+      }
+
+      // Success
+      setForm({ date: "", open: "", close: "", platzwart: "" });
+      alert("Slot added successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Unexpected error while adding slot");
     }
-    setSlots(result.slots);
-
-    // Reset form
-    setForm({ date: "", open: "", close: "", platzwart: "" });
-    alert("Slot added successfully!");
   };
 
   const events = mergeAdjacentOrOverlappingSlots(slots || []);
@@ -281,7 +457,6 @@ export default function CalendarPage() {
               weekends={true}
               select={handleDateSelect}
               selectAllow={(selectInfo) => {
-                console.log('Select allow check:', selectInfo);
                 const startDate = selectInfo.start;
                 const endDate = selectInfo.end;
                 const diffHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
