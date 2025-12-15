@@ -1,12 +1,10 @@
-# Deny access over http to our user data files
-<FilesMatch "\.(xml|txt)$">
-    Require all denied
-</FilesMatch>
+# Backend-only directory: PHP endpoints and sensitive user data
+# Location: /rumprobiert/php_spielerei
 
-# Allow PHP scripts to be accessed normally
-<FilesMatch "\.php$">
-    Require all granted
-</FilesMatch>
+# Explicitly deny access to the user data file
+<Files "user.xml">
+    Require all denied
+</Files>
 
 # Disable directory listing
 Options -Indexes
