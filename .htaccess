@@ -1,19 +1,12 @@
 # This .htaccess file belongs in /rumprobiert on server
-# Disable directory listing for security
+
+# Disable directory listing for security reasons
 Options -Indexes
 
-# Serve index.html when a directory is requested
+# Default file to serve when a directory is requested
 DirectoryIndex index.html
 
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-
-  # Redirect /page to /page/
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^(.+[^/])$ $1/ [R=301,L]
-
-  # If the file exists, serve it directly
-  RewriteCond %{REQUEST_FILENAME} -f
-  RewriteRule . - [L]
-</IfModule>
-
+# Ensure Apache adds a trailing slash when a directory
+# is requested without one (e.g. /calendar → /calendar/)
+# This issues a proper 301 redirect automatically
+DirectorySlash On
