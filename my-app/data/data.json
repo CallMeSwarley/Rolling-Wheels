@@ -80,25 +80,25 @@
   "galleryImages": [
     {
       "id": 1,
-      "url": "https://via.placeholder.com/400x300/4A90E2/ffffff?text=Rolling+Wheels+1",
+      "url": "/logo.png",
       "alt": "Rolling Wheels Team Photo 1",
       "caption": "Our team in action"
     },
     {
       "id": 2,
-      "url": "https://via.placeholder.com/400x300/50C878/ffffff?text=Rolling+Wheels+2",
+      "url": "/logo.png",
       "alt": "Rolling Wheels Event 2",
       "caption": "Community event"
     },
     {
       "id": 3,
-      "url": "https://via.placeholder.com/400x300/FF6B6B/ffffff?text=Rolling+Wheels+3",
+      "url": "/logo.png",
       "alt": "Rolling Wheels Training 3",
       "caption": "Training session"
     },
     {
       "id": 4,
-      "url": "https://via.placeholder.com/400x300/FFD93D/ffffff?text=Rolling+Wheels+4",
+      "url": "/logo.png",
       "alt": "Rolling Wheels Competition 4",
       "caption": "Competition day"
     }

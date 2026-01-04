@@ -24,7 +24,10 @@ export default function Header() {
             Was Wann Wo
           </Link>
           <Link href="/calendar" className={pathname === '/calendar/' ? 'active' : ''}>
-            Calendar
+            Kalender
+          </Link>
+          <Link href="/workshops" className={pathname === '/workshops/' ? 'active' : ''}>
+            Workshops
           </Link>
           <Link href="/downloads" className={pathname === '/downloads/' ? 'active' : ''}>
             Downloads

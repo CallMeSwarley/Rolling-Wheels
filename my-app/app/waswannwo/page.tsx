@@ -8,8 +8,8 @@ export default function WasWannWo() {
 
   // Read the eintritt.XML file
   async function loadEintritt() {
-    // const res = await fetch('http://localhost:1234/file-api.php', {
-      const res = await fetch('/php_spielerei/file-api.php', { // for production
+    const res = await fetch('http://localhost:1234/file-api.php', {
+      // const res = await fetch('/php_spielerei/file-api.php', { // for production
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

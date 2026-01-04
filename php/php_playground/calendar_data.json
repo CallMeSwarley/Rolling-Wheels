@@ -58,5 +58,47 @@
         "open": "12:00",
         "close": "15:00",
         "platzwart": "maxi_test"
+    },
+    {
+        "date": "2026-01-06",
+        "open": "08:30",
+        "close": "13:00",
+        "platzwart": "timm_test"
+    },
+    {
+        "date": "2026-01-07",
+        "open": "09:00",
+        "close": "11:00",
+        "platzwart": "marvin_test"
+    },
+    {
+        "date": "2026-01-07",
+        "open": "10:00",
+        "close": "13:30",
+        "platzwart": "timm_test"
+    },
+    {
+        "date": "2026-01-07",
+        "open": "13:30",
+        "close": "16:30",
+        "platzwart": "thomas_test"
+    },
+    {
+        "date": "2026-01-08",
+        "open": "08:30",
+        "close": "12:00",
+        "platzwart": "thomas_test"
+    },
+    {
+        "date": "2026-01-08",
+        "open": "10:00",
+        "close": "15:00",
+        "platzwart": "marvin_test"
+    },
+    {
+        "date": "2026-01-08",
+        "open": "13:00",
+        "close": "16:30",
+        "platzwart": "marvin_test"
     }
 ]
