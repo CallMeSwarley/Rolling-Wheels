@@ -25,9 +25,19 @@ export interface Credentials {
   password: string;
 }
 
+export interface Event {
+  id: number;
+  title: string;
+  date: string;
+  summary: string;
+  images?: string[];
+  folder?: string;
+}
+
 export interface AppData {
   openingHours: OpeningSlot[];
   files: FileItem[];
   galleryImages: GalleryImage[];
+  events: Event[];
   credentials: Credentials;
 }

@@ -26,15 +26,18 @@ export default function Header() {
           <Link href="/calendar" className={pathname === '/calendar/' ? 'active' : ''}>
             Kalender
           </Link>
+          <Link href="/events" className={pathname === '/events/' ? 'active' : ''}>
+            Events
+          </Link>
           <Link href="/workshops" className={pathname === '/workshops/' ? 'active' : ''}>
             Workshops
           </Link>
           <Link href="/downloads" className={pathname === '/downloads/' ? 'active' : ''}>
             Downloads
           </Link>
-          <Link href="/cms" className={pathname === '/cms/' ? 'active' : ''}>
+          {/* <Link href="/cms" className={pathname === '/cms/' ? 'active' : ''}>
             CMS
-          </Link>
+          </Link> */}
         </nav>
       </div>
     </header>

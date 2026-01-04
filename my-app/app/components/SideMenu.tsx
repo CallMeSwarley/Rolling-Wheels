@@ -13,6 +13,7 @@ export default function SideMenu() {
         <li><Link href="/" className={pathname === '/' ? 'active' : ''}>Home</Link></li>
         <li><Link href="/waswannwo" className={pathname === '/waswannwo/' ? 'active' : ''}>Was Wann Wo</Link></li>
         <li><Link href="/calendar" className={pathname === '/calendar/' ? 'active' : ''}>Kalender</Link></li>
+        <li><Link href="/events" className={pathname === '/events/' ? 'active' : ''}>Events</Link></li>
         <li><Link href="/workshops" className={pathname === '/workshops/' ? 'active' : ''}>Workshops</Link></li>
         <li><Link href="/history" className={pathname === '/history/' ? 'active' : ''}>Historie</Link></li>
         <li><Link href="/downloads" className={pathname === '/downloads/' ? 'active' : ''}>Downloads</Link></li>

@@ -1,66 +1,4 @@
 {
-  "openingHours": [
-    {
-      "open": "09:00",
-      "close": "12:00",
-      "date": "2025-12-08",
-      "platzwart": "Hans Meier"
-    },
-    {
-      "open": "12:00",
-      "close": "18:00",
-      "date": "2025-12-08",
-      "platzwart": "mÜer Meier"
-    },
-        {
-      "open": "07:00",
-      "close": "09:00",
-      "date": "2025-12-08",
-      "platzwart": "mÜller Meier"
-    },
-            {
-      "open": "18:00",
-      "close": "19:00",
-      "date": "2025-12-08",
-      "platzwart": "mÜleier"
-    },
-    {
-      "open": "09:00",
-      "close": "18:00",
-      "date": "2025-12-09",
-      "platzwart": "Hans Meier"
-    },
-    {
-      "open": "09:00",
-      "close": "18:00",
-      "date": "2025-12-10",
-      "platzwart": "Hans Meier"
-    },
-    {
-      "open": "09:00",
-      "close": "18:00",
-      "date": "2025-12-11",
-      "platzwart": "Meier Hans"
-    },
-    {
-      "open": "09:00",
-      "close": "20:00",
-      "date": "2025-12-12",
-      "platzwart": "Meier Meier"
-    },
-    {
-      "open": "12:00",
-      "close": "16:00",
-      "date": "2025-12-13",
-      "platzwart": "Hans Meier"
-    },
-    {
-      "open": "12:00",
-      "close": "17:00",
-      "date": "2025-12-14",
-      "platzwart": "Hans Hans"
-    }
-  ],
   "files": [
     {
       "id": 1,
@@ -101,6 +39,33 @@
       "url": "/logo.png",
       "alt": "Rolling Wheels Competition 4",
       "caption": "Competition day"
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "title": "Is Wurscht Jam 2023",
+      "date": "2023-09-23",
+      "summary": "DUMMY: Unser jährliches Sommerfest mit Live-Musik, Grill und vielen Aktivitäten für die ganze Familie. Sponsoren: xxx, xxx, xxx",
+      "folder": "iswurscht23"
+    },
+    {
+      "id": 2,
+      "title": "Frühjahrs-Workshop 2024",
+      "date": "2024-03-20",
+      "summary": "Workshop für Anfänger und Fortgeschrittene. Lernt neue Techniken und verbessert eure Fähigkeiten.",
+      "images": [
+        "/logo.png"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Vereinsmeisterschaft 2024",
+      "date": "2024-09-10",
+      "summary": "Die jährliche Vereinsmeisterschaft steht an! Meldet euch jetzt an und zeigt euer Können.",
+      "images": [
+        "/logo.png"
+      ]
     }
   ],
   "_comment": "WARNING: Storing plaintext credentials is for demonstration only. In production, use proper authentication with hashed passwords and environment variables.",

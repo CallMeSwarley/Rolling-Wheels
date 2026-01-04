@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/generate-image-manifest.js && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prebuild": "node scripts/generate-image-manifest.js"
   },
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.19",
