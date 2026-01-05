@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ImageCarousel from '../components/ImageCarousel';
 import data from '@/data/data.json';
 import { Event } from '@/types';
+import SideMenu from '../components/SideMenu';
 
 
 export default function EventsPage() {
@@ -19,73 +20,63 @@ export default function EventsPage() {
   };
 
   return (
-    <main className="events-page">
-        <div className="container">
-          <h1 style={{ color: '#dc2626', marginBottom: '2rem' }}>Unsere Events</h1>
-          <div className="events-grid">
-            {events.length === 0 ? (
-              <p>Aktuell sind keine Events verfügbar.</p>
-            ) : (
-              events.map((event) => (
-                <div key={event.id} className="event-card">
-                  <div className="event-header">
-                    <h2>{event.title}</h2>
-                    <p className="event-date">{formatDate(event.date)}</p>
-                  </div>
+    <div className="main-content">
+      <div className="with-sidebar">
+        <SideMenu />
+        <main className="page-content">
+          <div className="container">
+            <h2 style={{ color: '#dc2626', marginBottom: '2rem' }}>Unsere Events</h2>
+            <div className="events-grid">
+              {events.length === 0 ? (
+                <p>Aktuell sind keine Events verfügbar.</p>
+              ) : (
+                events.map((event) => (
+                  <div key={event.id} className="event-card">
+                    <div className="event-header">
+                      <h2>{event.title}</h2>
+                      <p className="event-date">{formatDate(event.date)}</p>
+                    </div>
 
-                  <div className="event-summary">
-                    <p>{event.summary}</p>
-                  </div>
+                    <div className="event-summary">
+                      <p>{event.summary}</p>
+                    </div>
 
-                  <div className="event-images">
-                    {event.folder ? (
-                      // Auto-load images from folder
-                      <ImageCarousel
-                        folder={event.folder}
-                        images={event.images || []}
-                        autoPlay={true}
-                      />
-                    ) : event.images && event.images.length === 1 ? (
-                      // Display single image without carousel controls
-                      <div className="single-image-container">
-                        <img
-                          src={event.images[0]}
-                          alt={event.title}
-                          className="single-image"
+                    <div className="event-images">
+                      {event.folder ? (
+                        // Auto-load images from folder
+                        <ImageCarousel
+                          folder={event.folder}
+                          images={event.images || []}
+                          autoPlay={true}
                         />
-                      </div>
-                    ) : event.images && event.images.length > 1 ? (
-                      // Use carousel for multiple images
-                      <ImageCarousel
-                        folder=""
-                        images={event.images}
-                        autoPlay={false}
-                      />
-                    ) : null}
+                      ) : event.images && event.images.length === 1 ? (
+                        // Display single image without carousel controls
+                        <div className="single-image-container">
+                          <img
+                            src={event.images[0]}
+                            alt={event.title}
+                            className="single-image"
+                          />
+                        </div>
+                      ) : event.images && event.images.length > 1 ? (
+                        // Use carousel for multiple images
+                        <ImageCarousel
+                          folder=""
+                          images={event.images}
+                          autoPlay={false}
+                        />
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
 
-        <style jsx>{`
-          .events-page {
-            min-height: 100vh;
-            padding: 120px 20px 60px;
-            background-color: #f5f5f5;
-          }
-
+          <style jsx>{`
           .container {
             max-width: 1200px;
             margin: 0 auto;
-          }
-
-          h1 {
-            font-size: 2.5rem;
-            color: #333;
-            margin-bottom: 20px;
-            text-align: center;
           }
 
           .intro-text {
@@ -165,13 +156,6 @@ export default function EventsPage() {
           }
 
           @media (max-width: 768px) {
-            .events-page {
-              padding: 100px 15px 40px;
-            }
-
-            h1 {
-              font-size: 2rem;
-            }
 
             .event-header {
               padding: 20px 20px 15px;
@@ -194,6 +178,8 @@ export default function EventsPage() {
             }
           }
         `}</style>
-      </main>
+        </main>
+      </div>
+    </div>
   );
 }

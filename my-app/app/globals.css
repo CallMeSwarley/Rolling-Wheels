@@ -706,19 +706,6 @@ h6 {
   box-shadow: 0 5px 20px rgba(220, 38, 38, 0.4);
 }
 
-/* Ansprechpartner Page */
-.ansprechpartner-page {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.ansprechpartner-page h1 {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  color: #333;
-}
-
 .contact-persons-list {
   display: flex;
   flex-direction: column;

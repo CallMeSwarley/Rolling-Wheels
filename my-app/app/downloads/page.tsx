@@ -8,7 +8,12 @@ export default function DownloadsPage() {
   const files: FileItem[] = data.files;
 
   const handleDownload = (filename: string) => {
-    alert(`Downloading ${filename}... (In a real application, this would trigger a PDF download)`);
+    const link = document.createElement('a');
+    link.href = `/${filename}`;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -16,9 +21,9 @@ export default function DownloadsPage() {
       <div className="with-sidebar">
         <SideMenu />
         <main className="page-content">
-          <h2 style={{ color: '#dc2626', marginBottom: '2rem' }}>Download Registration Forms</h2>
+          <h2 style={{ color: '#dc2626', marginBottom: '2rem' }}>Anmeldeformulare herunterladen</h2>
           <p style={{ color: '#4a5568', marginBottom: '2rem' }}>
-            Download the necessary registration forms to join Rolling Wheels. All forms are in PDF format.
+            Laden Sie die erforderlichen Anmeldeformulare herunter, um den Rolling Wheels beizutreten oder beim Workshop mitzumachen. Alle Formulare sind im PDF-Format.
           </p>
           <ul className="downloads-list">
             {files.map((file) => (
@@ -26,13 +31,13 @@ export default function DownloadsPage() {
                 <div className="download-info">
                   <h3>{file.name}</h3>
                   <p>{file.description}</p>
-                  <small style={{ color: '#a0aec0' }}>Uploaded: {file.uploadDate}</small>
+                  <small style={{ color: '#a0aec0' }}>Hochgeladen: {file.uploadDate}</small>
                 </div>
                 <button 
                   className="download-button"
                   onClick={() => handleDownload(file.filename)}
                 >
-                  Download PDF
+                  PDF herunterladen
                 </button>
               </li>
             ))}

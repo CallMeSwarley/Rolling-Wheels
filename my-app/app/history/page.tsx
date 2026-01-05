@@ -205,7 +205,7 @@ export default function History() {
             <div className="with-sidebar">
                 <SideMenu />
                 <main className="page-content">
-                    <h1 style={{ marginBottom: '2rem' }}>Vereinsgeschichte</h1>
+                    <h2 style={{ color: '#dc2626', marginBottom: '2rem' }}>Vereinsgeschichte</h2>
                     <p style={{ lineHeight: '1.8', color: '#4a5568', marginBottom: '3rem' }}>
                         Von der Gründung 1990 bis heute – die Geschichte von Rolling Wheels e.V. ist geprägt von Leidenschaft, 
                         unzähligen Arbeitsstunden in Eigenleistung und großartigen sportlichen Erfolgen.

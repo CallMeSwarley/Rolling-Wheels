@@ -52,7 +52,7 @@ const contactPersons: ContactPerson[] = [
         email: 'timm.dauth@rolling-wheels.net',
         image: '/leiter_bilder/td.png'
     },
-        {
+    {
         id: 7,
         name: 'Marvin Stellwag',
         position: 'Organisationswart',
@@ -67,30 +67,29 @@ export default function AnsprechpartnerPage() {
             <div className="with-sidebar">
                 <SideMenu />
                 <main className="page-content">
-                    <div className="ansprechpartner-page">
-                        <h1>Ansprechpartner</h1>
-                        <div className="contact-persons-list">
-                            {contactPersons.map((person) => (
-                                <div key={person.id} className="contact-person-row">
-                                    <div className="person-image">
-                                        <Image
-                                            src={person.image}
-                                            alt={person.name}
-                                            width={150}
-                                            height={150}
-                                            style={{ objectFit: 'cover', borderRadius: '8px' }}
-                                        />
-                                    </div>
-                                    <div className="person-info">
-                                        <h3>{person.position}</h3>
-                                        <p className="person-name">{person.name}</p>
-                                        <a href={`mailto:${person.email}`} className="person-email">
-                                            {person.email}
-                                        </a>
-                                    </div>
+                    <h2 style={{ color: '#dc2626', marginBottom: '2rem' }}>Ansprechpartner</h2>
+
+                    <div className="contact-persons-list">
+                        {contactPersons.map((person) => (
+                            <div key={person.id} className="contact-person-row">
+                                <div className="person-image">
+                                    <Image
+                                        src={person.image}
+                                        alt={person.name}
+                                        width={150}
+                                        height={150}
+                                        style={{ objectFit: 'cover', borderRadius: '8px' }}
+                                    />
                                 </div>
-                            ))}
-                        </div>
+                                <div className="person-info">
+                                    <h3>{person.position}</h3>
+                                    <p className="person-name">{person.name}</p>
+                                    <a href={`mailto:${person.email}`} className="person-email">
+                                        {person.email}
+                                    </a>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </main>
             </div>

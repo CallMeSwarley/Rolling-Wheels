@@ -2,17 +2,24 @@
   "files": [
     {
       "id": 1,
-      "name": "Registration Form 2024",
-      "filename": "registration-2024.pdf",
-      "description": "Main registration form for new members",
-      "uploadDate": "2024-01-15"
+      "name": "Anmeldeformular",
+      "filename": "svl_beitr_form_20_rw.pdf",
+      "description": "Anmeldeformular für neue Mitglieder",
+      "uploadDate": "2026-01-05"
     },
     {
       "id": 2,
-      "name": "Youth Registration",
-      "filename": "youth-registration.pdf",
-      "description": "Registration form for youth members",
-      "uploadDate": "2024-01-15"
+      "name": "Um- / Zusatzanmeldung",
+      "filename": "Ummeldung_Zusatzanmeldung_2017.pdf",
+      "description": "Formular für Um- und Zusatzanmeldungen",
+      "uploadDate": "2026-01-05"
+    },
+    {
+      "id": 3,
+      "name": "Workshop Anmeldeformular",
+      "filename": "anmeldung-workshop.pdf",
+      "description": "Anmeldeschluss ist jeweils der Freitag vor dem Workshop",
+      "uploadDate": "2026-01-05"
     }
   ],
   "galleryImages": [
