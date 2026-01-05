@@ -58,3 +58,7 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+# imagefiles
+events/
+leiter_bilder/
