@@ -188,6 +188,7 @@ export default function ImageCarousel({
           width: 100%;
           max-width: 800px;
           margin: 0 auto;
+          overflow: hidden;
         }
 
         .carousel-wrapper {
@@ -215,6 +216,8 @@ export default function ImageCarousel({
         .carousel-image {
           max-width: 100%;
           max-height: 100%;
+          width: 100%;
+          height: 100%;
           object-fit: contain;
           transition: opacity 0.3s ease-in-out;
         }
@@ -255,6 +258,7 @@ export default function ImageCarousel({
           padding: 8px 16px;
           border-radius: 20px;
           font-size: 14px;
+          z-index: 10;
         }
 
         .carousel-dots {
@@ -262,6 +266,8 @@ export default function ImageCarousel({
           justify-content: center;
           gap: 10px;
           margin-top: 20px;
+          flex-wrap: wrap;
+          padding: 0 10px;
         }
 
         .carousel-dot {
@@ -295,8 +301,67 @@ export default function ImageCarousel({
           }
 
           .carousel-button {
-            font-size: 18px;
-            padding: 12px;
+            font-size: 16px;
+            padding: 10px;
+          }
+
+          .carousel-button-prev {
+            left: 5px;
+          }
+
+          .carousel-button-next {
+            right: 5px;
+          }
+
+          .carousel-counter {
+            font-size: 12px;
+            padding: 6px 12px;
+            bottom: 15px;
+          }
+
+          .carousel-dots {
+            gap: 8px;
+            margin-top: 15px;
+          }
+
+          .carousel-dot {
+            width: 10px;
+            height: 10px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .carousel-wrapper {
+            height: 250px;
+          }
+
+          .carousel-button {
+            font-size: 14px;
+            padding: 8px;
+          }
+
+          .carousel-button-prev {
+            left: 2px;
+          }
+
+          .carousel-button-next {
+            right: 2px;
+          }
+
+          .carousel-counter {
+            font-size: 11px;
+            padding: 5px 10px;
+            bottom: 10px;
+          }
+
+          .carousel-dots {
+            gap: 6px;
+            margin-top: 12px;
+          }
+
+          .carousel-dot {
+            width: 8px;
+            height: 8px;
           }
         }
       `}</style>

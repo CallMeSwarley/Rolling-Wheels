@@ -119,6 +119,22 @@ h6 {
 .page-content {
   flex: 1;
   padding: 2rem;
+  min-width: 0; /* Allows content to shrink below natural size */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.page-content p,
+.page-content h1,
+.page-content h2,
+.page-content h3,
+.page-content h4,
+.page-content h5,
+.page-content h6,
+.page-content li {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .page-content a {
@@ -126,6 +142,8 @@ h6 {
   text-decoration-style: dotted;
   text-underline-offset: 3px;
   transition: opacity 0.3s;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .page-content a:hover {
@@ -576,11 +594,16 @@ h6 {
 
   .with-sidebar {
     flex-direction: column;
+    padding: 1rem;
   }
 
-  .side-menu {
-    display: none;
+  .page-content {
+    padding: 1rem;
   }
+
+  /* .side-menu {
+    display: none;
+  } */
 
   .footer-content {
     grid-template-columns: 1fr;
@@ -598,6 +621,18 @@ h6 {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
   }
 }
 

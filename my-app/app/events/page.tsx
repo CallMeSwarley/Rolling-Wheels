@@ -77,6 +77,8 @@ export default function EventsPage() {
           .container {
             max-width: 1200px;
             margin: 0 auto;
+            width: 100%;
+            overflow-x: hidden;
           }
 
           .intro-text {
@@ -117,6 +119,8 @@ export default function EventsPage() {
             font-size: 2rem;
             color: #333;
             margin-bottom: 10px;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
           }
 
           .event-date {
@@ -133,6 +137,8 @@ export default function EventsPage() {
             color: #555;
             line-height: 1.6;
             font-size: 1.1rem;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
           }
 
           .event-images {
@@ -156,25 +162,51 @@ export default function EventsPage() {
           }
 
           @media (max-width: 768px) {
+            .container {
+              padding: 0;
+            }
+
+            .event-card {
+              border-radius: 8px;
+              margin: 0;
+            }
 
             .event-header {
-              padding: 20px 20px 15px;
+              padding: 15px 15px 12px;
             }
 
             .event-header h2 {
-              font-size: 1.5rem;
+              font-size: 1.3rem;
             }
 
             .event-summary {
-              padding: 15px 20px;
+              padding: 12px 15px;
             }
 
             .event-summary p {
-              font-size: 1rem;
+              font-size: 0.95rem;
             }
 
             .event-images {
-              padding: 0 20px 20px;
+              padding: 0 15px 15px;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .event-header {
+              padding: 12px 12px 10px;
+            }
+
+            .event-header h2 {
+              font-size: 1.2rem;
+            }
+
+            .event-summary {
+              padding: 10px 12px;
+            }
+
+            .event-images {
+              padding: 0 12px 12px;
             }
           }
         `}</style>

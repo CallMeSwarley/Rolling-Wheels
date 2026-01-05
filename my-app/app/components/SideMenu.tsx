@@ -18,7 +18,7 @@ export default function SideMenu() {
         <li><Link href="/history" className={pathname === '/history/' ? 'active' : ''}>Historie</Link></li>
         <li><Link href="/downloads" className={pathname === '/downloads/' ? 'active' : ''}>Downloads</Link></li>
         <li><Link href="/ansprechpartner" className={pathname === '/ansprechpartner/' ? 'active' : ''}>Ansprechpartner</Link></li>
-        <li><a href="#about">Über uns</a></li>
+        {/* <li><a href="#about">Über uns</a></li> */}
         <li><a href="#contact">Kontakt</a></li>
         <li><Link href="/datenschutz" className={pathname === '/datenschutz/' ? 'active' : ''}>Datenschutz</Link></li>
       </ul>
