@@ -5,6 +5,27 @@ export interface OpeningSlot {
   platzwart: string;
 }
 
+export type AppointmentType = 'session' | 'event' | 'workshop' | 'other';
+export type UserRole = 'admin' | 'platzwart' | 'dev';
+
+export interface Appointment {
+  date: string;
+  start: string;
+  end: string;
+  responsible: string;
+  type: AppointmentType;
+  month: number;
+  name?: string;
+}
+
+export interface MonthConfig {
+  month: number;
+  month_name: string;
+  min_gap_mins: number;
+  corehours_start: string;
+  corehours_end: string;
+}
+
 export interface FileItem {
   id: number;
   name: string;

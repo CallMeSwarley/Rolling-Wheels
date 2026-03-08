@@ -9,4 +9,15 @@ DirectoryIndex index.html
 # Ensure Apache adds a trailing slash when a directory
 # is requested without one (e.g. /calendar → /calendar/)
 # This issues a proper 301 redirect automatically
-DirectorySlash On
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect directory requests without trailing slash
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^(.+[^/])$ /$1/ [R=301,L]
+
+    # Serve existing files directly
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule . - [L]
+</IfModule>
+
