@@ -1,17 +1,7 @@
-﻿<?php
-session_start();
-
-// --- CORS — allow dev (localhost:3000) and production domain ---
-header('Access-Control-Allow-Origin: http://localhost:3000'); // comment out in production
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Access-Control-Allow-Credentials: true');
+<?php
+require_once __DIR__ . '/bootstrap.php';
 header('Content-Type: application/json');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
 
 // --- READ JSON INPUT ---
 $rawInput = file_get_contents('php://input');
@@ -159,12 +149,15 @@ function insertAppointment($calendarFilePath, $monthFilePath, $newAppt) {
             return ['error' => 'No configuration for month ' . $newAppt['month'] . '. Set up month config before adding sessions.', 'appointments' => $appointments];
         }
 
-        // --- Core hours check ---
-        $coreStartTs = strtotime($newAppt['date'] . ' ' . $cfg['corehours_start']);
-        $coreEndTs   = strtotime($newAppt['date'] . ' ' . $cfg['corehours_end']);
-        if ($newStartTs < $coreStartTs || $newEndTs > $coreEndTs) {
+        // --- Core hours check: at least 2 hours of the session must overlap with core hours ---
+        $coreStartTs  = strtotime($newAppt['date'] . ' ' . $cfg['corehours_start']);
+        $coreEndTs    = strtotime($newAppt['date'] . ' ' . $cfg['corehours_end']);
+        $overlapStart = max($newStartTs, $coreStartTs);
+        $overlapEnd   = min($newEndTs, $coreEndTs);
+        $overlapMins  = ($overlapEnd - $overlapStart) / 60;
+        if ($overlapMins < 120) {
             flock($fp, LOCK_UN); fclose($fp);
-            return ['error' => "Session must be within core hours ({$cfg['corehours_start']} - {$cfg['corehours_end']}).", 'appointments' => $appointments];
+            return ['error' => "At least 2 hours of the session must be within core hours ({$cfg['corehours_start']} - {$cfg['corehours_end']}).", 'appointments' => $appointments];
         }
 
         // --- Filter same-day sessions ---
@@ -235,22 +228,22 @@ function insertAppointment($calendarFilePath, $monthFilePath, $newAppt) {
                     $prevEndTs = max($prevEndTs ?? 0, $sEndTs);
                 }
             } else {
-                // Gaps are allowed but must be >= minGapMins // TODO: if we have multiple already on that day we need to check the closest ones not all or only the first
-                foreach ($daySessions as $s) {
-                    $sStartTs = strtotime($newAppt['date'] . ' ' . $s['start']);
-                    $sEndTs   = strtotime($newAppt['date'] . ' ' . $s['end']);
-
-                    // Gap: new ends before this starts
-                    if ($newEndTs <= $sStartTs) {
-                        $gapMins = ($sStartTs - $newEndTs) / 60;
+                // Gaps are allowed but must be >= minGapMins.
+                // Check against merged ranges so that overlapping/adjacent existing sessions
+                // are treated as one block — avoiding false "small gap" errors against sessions
+                // that are part of the same contiguous block as the new session's neighbour.
+                foreach ($mergedRanges as $range) {
+                    // Gap: new ends before this range starts
+                    if ($newEndTs <= $range['start']) {
+                        $gapMins = ($range['start'] - $newEndTs) / 60;
                         if ($gapMins > 0 && $gapMins < $minGapMins) {
                             flock($fp, LOCK_UN); fclose($fp);
                             return ['error' => "Gap of {$gapMins} min is too small. Minimum gap is {$minGapMins} min.", 'appointments' => $appointments];
                         }
                     }
-                    // Gap: new starts after this ends
-                    if ($newStartTs >= $sEndTs) {
-                        $gapMins = ($newStartTs - $sEndTs) / 60;
+                    // Gap: new starts after this range ends
+                    if ($newStartTs >= $range['end']) {
+                        $gapMins = ($newStartTs - $range['end']) / 60;
                         if ($gapMins > 0 && $gapMins < $minGapMins) {
                             flock($fp, LOCK_UN); fclose($fp);
                             return ['error' => "Gap of {$gapMins} min is too small. Minimum gap is {$minGapMins} min.", 'appointments' => $appointments];

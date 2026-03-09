@@ -469,7 +469,7 @@ export default function CalendarPage() {
                 {form.type === 'session' && form.date && activeCfg && (
                   <div style={{ background: '#fefce8', border: '1px solid #fde047', borderRadius: '6px', padding: '0.75rem', fontSize: '0.85rem', color: '#713f12' }}>
                     <strong>Monat {activeCfg.month_name}:</strong>&nbsp;
-                    Kernzeiten {activeCfg.corehours_start} bis {activeCfg.corehours_end} |&nbsp;
+                    Mind. 2 Std. innerhalb der Kernzeiten {activeCfg.corehours_start}–{activeCfg.corehours_end} |&nbsp;
                     Min. Abstand (wenn nicht angrenzend/überlappend): {activeCfg.min_gap_mins === 0 ? 'kein Abstand erlaubt (angrenzend)' : `${activeCfg.min_gap_mins} Minuten`}
                   </div>
                 )}
