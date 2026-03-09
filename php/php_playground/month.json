@@ -1,0 +1,93 @@
+[
+    {
+        "month": 0,
+        "month_name": "Kein Monat (Events, Workshops, Sonstiges)",
+        "min_gap_mins": 0,
+        "corehours_start": "00:00",
+        "corehours_end": "23:59"
+    },
+    {
+        "month": 1,
+        "month_name": "Januar",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 2,
+        "month_name": "Februar",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 3,
+        "month_name": "M\u00e4rz",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 4,
+        "month_name": "April",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 5,
+        "month_name": "Mai",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 6,
+        "month_name": "Juni",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 7,
+        "month_name": "Juli",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 8,
+        "month_name": "August",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 9,
+        "month_name": "September",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 10,
+        "month_name": "Oktober",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 11,
+        "month_name": "November",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    },
+    {
+        "month": 12,
+        "month_name": "Dezember",
+        "min_gap_mins": 120,
+        "corehours_start": "12:00",
+        "corehours_end": "22:00"
+    }
+]

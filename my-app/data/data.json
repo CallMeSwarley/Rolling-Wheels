@@ -1,0 +1,83 @@
+{
+  "files": [
+    {
+      "id": 1,
+      "name": "Anmeldeformular",
+      "filename": "svl_beitr_form_20_rw.pdf",
+      "description": "Anmeldeformular für neue Mitglieder",
+      "uploadDate": "2026-01-05"
+    },
+    {
+      "id": 2,
+      "name": "Um- / Zusatzanmeldung",
+      "filename": "Ummeldung_Zusatzanmeldung_2017.pdf",
+      "description": "Formular für Um- und Zusatzanmeldungen",
+      "uploadDate": "2026-01-05"
+    },
+    {
+      "id": 3,
+      "name": "Workshop Anmeldeformular",
+      "filename": "anmeldung-workshop.pdf",
+      "description": "Anmeldeschluss ist jeweils der Freitag vor dem Workshop",
+      "uploadDate": "2026-01-05"
+    }
+  ],
+  "galleryImages": [
+    {
+      "id": 1,
+      "url": "/logo.png",
+      "alt": "Rolling Wheels Team Photo 1",
+      "caption": "Our team in action"
+    },
+    {
+      "id": 2,
+      "url": "/logo.png",
+      "alt": "Rolling Wheels Event 2",
+      "caption": "Community event"
+    },
+    {
+      "id": 3,
+      "url": "/logo.png",
+      "alt": "Rolling Wheels Training 3",
+      "caption": "Training session"
+    },
+    {
+      "id": 4,
+      "url": "/logo.png",
+      "alt": "Rolling Wheels Competition 4",
+      "caption": "Competition day"
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "title": "Is Wurscht Jam 2023",
+      "date": "2023-09-23",
+      "summary": "DUMMY: Unser jährliches Sommerfest mit Live-Musik, Grill und vielen Aktivitäten für die ganze Familie. Sponsoren: xxx, xxx, xxx",
+      "folder": "iswurscht23"
+    },
+    {
+      "id": 2,
+      "title": "Frühjahrs-Workshop 2024",
+      "date": "2024-03-20",
+      "summary": "Workshop für Anfänger und Fortgeschrittene. Lernt neue Techniken und verbessert eure Fähigkeiten.",
+      "images": [
+        "/logo.png"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Vereinsmeisterschaft 2024",
+      "date": "2024-09-10",
+      "summary": "Die jährliche Vereinsmeisterschaft steht an! Meldet euch jetzt an und zeigt euer Können.",
+      "images": [
+        "/logo.png"
+      ]
+    }
+  ],
+  "_comment": "WARNING: Storing plaintext credentials is for demonstration only. In production, use proper authentication with hashed passwords and environment variables.",
+  "credentials": {
+    "username": "admin",
+    "password": "rolling2024"
+  }
+}
