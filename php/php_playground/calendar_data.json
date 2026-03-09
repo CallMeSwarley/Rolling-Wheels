@@ -12,7 +12,7 @@
         "start": "09:00",
         "end": "11:00",
         "type": "other",
-        "name": "Versammler",
+        "name": "Versammlung",
         "responsible": "timm_test",
         "month": 3
     },
@@ -40,5 +40,85 @@
         "type": "session",
         "responsible": "timm_test",
         "month": 3
+    },
+    {
+        "date": "2026-03-10",
+        "start": "12:30",
+        "end": "15:30",
+        "type": "session",
+        "responsible": "timm_test",
+        "month": 3
+    },
+    {
+        "date": "2026-03-10",
+        "start": "15:30",
+        "end": "18:30",
+        "type": "session",
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-03-10",
+        "start": "18:30",
+        "end": "20:30",
+        "type": "session",
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-03-11",
+        "start": "13:00",
+        "end": "15:00",
+        "type": "session",
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-03-11",
+        "start": "14:30",
+        "end": "16:30",
+        "type": "session",
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-03-11",
+        "start": "18:30",
+        "end": "19:00",
+        "type": "session",
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-03-13",
+        "start": "14:30",
+        "end": "18:00",
+        "type": "session",
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-03-13",
+        "start": "16:00",
+        "end": "19:30",
+        "type": "session",
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-03-13",
+        "start": "19:00",
+        "end": "20:00",
+        "type": "session",
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-04-12",
+        "start": "13:42",
+        "end": "14:42",
+        "type": "workshop",
+        "responsible": "maxi_test",
+        "month": 4
     }
 ]
