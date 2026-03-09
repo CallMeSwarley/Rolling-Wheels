@@ -1,30 +1,11 @@
 ﻿<?php
-// ------------------------
-// Secure session setup (must match login.php)
-// ------------------------
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-           || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443;
-ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_secure',   $isHttps ? '1' : '0');
-ini_set('session.cookie_samesite', 'Lax');
-ini_set('session.cookie_path',     '/');
 session_start();
 
 // --- CORS — allow dev (localhost:3000) and production domain ---
-$allowedOrigins = [
-    'http://localhost:3000',
-    'https://rolling-wheels.net',
-    'https://www.rolling-wheels.net',
-    'http://rumprobiert.rolling-wheels.net',
-    'https://rumprobiert.rolling-wheels.net',
-];
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowedOrigins, true)) {
-    header("Access-Control-Allow-Origin: $origin");
-    header("Access-Control-Allow-Credentials: true");
-}
+header('Access-Control-Allow-Origin: http://localhost:3000'); // comment out in production
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Credentials: true');
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -53,7 +34,6 @@ define('APPOINTMENT_TYPES', ['session', 'event', 'workshop', 'other']);
 define('ALLOWED_ROLES',     ['admin', 'platzwart', 'dev']);
 
 error_log("Received action: " . $action);
-
 // =====================================================================
 // READ-ONLY ACTIONS (no auth required)
 // =====================================================================
@@ -92,7 +72,7 @@ if ($action === 'read_eintritt') {
 // =====================================================================
 if (empty($_SESSION['loggedin'])) {
     http_response_code(401);
-    echo json_encode(['error' => 'Not authenticated']);
+    echo json_encode(['error' => 'Not authenticated', 'loggedin' => $_SESSION['loggedin']]);
     exit;
 }
 if (!array_intersect($_SESSION['roles'], ALLOWED_ROLES)) {
@@ -101,7 +81,7 @@ if (!array_intersect($_SESSION['roles'], ALLOWED_ROLES)) {
     exit;
 }
 
-$userRoles = $_SESSION['roles'];
+$userRoles = $_SESSION['roles'] ?? [];
 $username  = $_SESSION['username'] ?? 'unknown';
 $isAdmin   = in_array('admin', $userRoles);
 
@@ -255,7 +235,7 @@ function insertAppointment($calendarFilePath, $monthFilePath, $newAppt) {
                     $prevEndTs = max($prevEndTs ?? 0, $sEndTs);
                 }
             } else {
-                // Gaps are allowed but must be >= minGapMins
+                // Gaps are allowed but must be >= minGapMins // TODO: if we have multiple already on that day we need to check the closest ones not all or only the first
                 foreach ($daySessions as $s) {
                     $sStartTs = strtotime($newAppt['date'] . ' ' . $s['start']);
                     $sEndTs   = strtotime($newAppt['date'] . ' ' . $s['end']);

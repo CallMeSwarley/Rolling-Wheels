@@ -1,42 +1,27 @@
 <?php
 // ------------------------
-// CORS — allow dev (localhost:3000) and production domain
+// Secure session setup (auto-detect HTTPS)
 // ------------------------
-$allowedOrigins = [
-    'http://localhost:3000',
-    'https://rolling-wheels.net',
-    'https://www.rolling-wheels.net',
-    'https://rumprobiert.rolling-wheels.net',
-    'http://rumprobiert.rolling-wheels.net',
-];
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowedOrigins, true)) {
-    header("Access-Control-Allow-Origin: $origin");
-    header("Access-Control-Allow-Credentials: true");
-}
-header("Access-Control-Allow-Methods: POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+// $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+//            || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443;
+// ini_set('session.cookie_secure',   $isHttps ? '1' : '0');
+// ini_set('session.cookie_samesite', value: 'Lax');
+// ini_set('session.cookie_path',     '/');
+ini_set('session.cookie_httponly', 1);  // Prevent JS access to cookie
+// ini_set('session.cookie_secure', 1); // Uncomment once HTTPS is active
+session_start();
 
 // ------------------------
 // Handle OPTIONS preflight
 // ------------------------
 if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    header('Access-Control-Allow-Origin: http://localhost:3000'); // comment out in production
+    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
+    header('Access-Control-Allow-Credentials: true');
     http_response_code(200);
     exit;
 }
-
-// ------------------------
-// Secure session setup (auto-detect HTTPS)
-// ------------------------
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-           || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443;
-ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_secure',   $isHttps ? '1' : '0');
-ini_set('session.cookie_samesite', value: 'Lax');
-ini_set('session.cookie_path',     '/');
-ini_set('session.cookie_httponly', 1);  // Prevent JS access to cookie
-// ini_set('session.cookie_secure', 1); // Uncomment once HTTPS is active
-session_start();
 
 // ------------------------
 // Initialize variables
@@ -91,6 +76,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // ------------------------
     // Respond based on request type
     // ------------------------
+    header("Access-Control-Allow-Origin: http://localhost:3000");
+    header("Access-Control-Allow-Credentials: true");
     header('Content-Type: application/json');
 
     if ($login_successful) {
