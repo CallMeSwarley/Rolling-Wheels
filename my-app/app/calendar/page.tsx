@@ -26,23 +26,76 @@ const APPOINTMENT_LABELS: Record<AppointmentType, string> = {
   other: 'Sonstiges',
 };
 
-function mapAppointmentsToEvents(appointments: Appointment[]) {
-  return appointments.map((appt, index) => ({
-    id: String(index),
-    title: `${appt.start} - ${appt.end} (${appt.responsible})`,
-    start: `${appt.date}T${appt.start}`,
-    end: `${appt.date}T${appt.end}`,
-    backgroundColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
-    borderColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
-    textColor: '#ffffff',
-    extendedProps: { appointment: appt, index },
-  }));
+type MergedSession = { date: string; start: string; end: string; responsibles: { name: string; end: string }[] };
+
+function mapAppointmentsToEvents(appointments: Appointment[], mergeOverlappingSessions = false) {
+  const today = new Date().toISOString().split('T')[0];
+  const indexed = appointments
+    .map((appt, index) => ({ appt, index }))
+    .filter(({ appt }) => appt.date >= today);
+
+  if (!mergeOverlappingSessions) {
+    return indexed.map(({ appt, index }) => ({
+      id: String(index),
+      title: `${appt.start} - ${appt.end} (${appt.responsible})`,
+      start: `${appt.date}T${appt.start}`,
+      end: `${appt.date}T${appt.end}`,
+      backgroundColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
+      borderColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
+      textColor: '#ffffff',
+      extendedProps: { appointment: appt, index },
+    }));
+  }
+
+  // Split sessions and non-sessions
+  const sessions = indexed.filter(({ appt }) => appt.type === 'session');
+  const others = indexed.filter(({ appt }) => appt.type !== 'session');
+
+  // Sort sessions by date + start time
+  const sorted = [...sessions].sort((a, b) =>
+    `${a.appt.date}T${a.appt.start}`.localeCompare(`${b.appt.date}T${b.appt.start}`)
+  );
+
+  // Merge overlapping/adjacent sessions on the same date
+  const mergedGroups: MergedSession[] = [];
+  for (const { appt } of sorted) {
+    const last = mergedGroups[mergedGroups.length - 1];
+    if (last && last.date === appt.date && appt.start <= last.end) {
+      if (appt.end > last.end) last.end = appt.end;
+      last.responsibles.push({ name: appt.responsible, end: appt.end });
+    } else {
+      mergedGroups.push({ date: appt.date, start: appt.start, end: appt.end, responsibles: [{ name: appt.responsible, end: appt.end }] });
+    }
+  }
+
+  return [
+    ...mergedGroups.map((m, i) => ({
+      id: `merged-session-${i}`,
+      title: m.responsibles.map(r => `${r.name} → ${r.end}`).join(', '),
+      start: `${m.date}T${m.start}`,
+      end: `${m.date}T${m.end}`,
+      backgroundColor: APPOINTMENT_COLORS['session'],
+      borderColor: APPOINTMENT_COLORS['session'],
+      textColor: '#ffffff',
+      extendedProps: { mergedSession: m, appointment: null as Appointment | null, index: -1 },
+    })),
+    ...others.map(({ appt, index }) => ({
+      id: String(index),
+      title: `${appt.start} - ${appt.end} (${appt.responsible})`,
+      start: `${appt.date}T${appt.start}`,
+      end: `${appt.date}T${appt.end}`,
+      backgroundColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
+      borderColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
+      textColor: '#ffffff',
+      extendedProps: { appointment: appt, index },
+    })),
+  ];
 }
 
 const apiBase = (path: string) =>
   devMode ? `http://localhost:1234/${path}` : `/php_spielerei/${path}`;
 
-async function apiFetch(path: string, body: object) { // TODO: in readonly-view or only platzwart-auth we want to merge overlapping sessions into one event and a list of the diffferent responsibles
+async function apiFetch(path: string, body: object) {
   const res = await fetch(apiBase(path), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -227,13 +280,16 @@ export default function CalendarPage() {
   };
 
   const selMonthCfg = months.find(m => m.month === selMonth);
-  const selMonthHasSessions = appointments.some(a => a.type === 'session' && a.month === selMonth);// TODO: only check for sessions in the current year as we store also the ones from the past years
+  const currentYear = new Date().getFullYear();
+  const selMonthHasSessions = appointments.some(
+    a => a.type === 'session' && a.month === selMonth && new Date(a.date).getFullYear() === currentYear
+  );
 
   const activeCfg = form.type === 'session'
     ? months.find(m => m.month === (form.date ? new Date(form.date).getMonth() + 1 : 0))
     : null;
 
-  const calendarEvents = mapAppointmentsToEvents(appointments);
+  const calendarEvents = mapAppointmentsToEvents(appointments, !isAdmin && !isDev);
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '0.8rem',
@@ -271,7 +327,7 @@ export default function CalendarPage() {
           <div style={{ margin: smallScreen ? '0 -1rem' : '0', padding: smallScreen ? '0 0.5rem' : '0' }}>
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, listPlugin]}
-              initialView={smallScreen ? 'listMonth' : 'dayGridMonth'}
+              initialView={smallScreen ? 'listMonth' : 'timeGridWeek'}
               slotMinTime="08:00:00"
               slotMaxTime="23:30:00"
               allDaySlot={false}
@@ -291,6 +347,7 @@ export default function CalendarPage() {
                 const diff = (info.end.getTime() - info.start.getTime()) / (1000 * 60 * 60);
                 return diff >= 24 || diff >= 2;
               }}
+              eventDisplay="block"
               eventOverlap={true}
               headerToolbar={
                 smallScreen
@@ -306,23 +363,35 @@ export default function CalendarPage() {
               validRange={{ start: new Date().toISOString().split('T')[0] }}
               selectConstraint={{ start: new Date().toISOString().split('T')[0], startTime: '08:00:00', endTime: '23:30:00' }}
               eventContent={(arg) => {
-                const appt: Appointment | undefined = arg.event.extendedProps.appointment;
-                if (!appt) {
+                const appt: Appointment | null = arg.event.extendedProps.appointment;
+                const mergedSession: MergedSession | undefined = arg.event.extendedProps.mergedSession;
+                if (!appt && !mergedSession) {
                   // Mirror event shown during drag-select – render a simple placeholder
                   return (
-                    <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}> 
+                    <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}>
                       <b>Neuer Termin</b>
                     </div>
                   );
                 }
-                const typeLabel = APPOINTMENT_LABELS[appt.type] ?? appt.type;
+                if (mergedSession) {
+                  return (
+                    <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}>
+                      <b>{mergedSession.start} – {mergedSession.end}</b>
+                      {mergedSession.responsibles.map((r, i) => (
+                        <div key={i} style={{ whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.9 }}>
+                          {r.name} → {r.end}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                }
                 return (
                   <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}>
                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                      <b>{appt.name ? appt.name : `${appt.start} - ${appt.end}`}</b>
+                      <b>{appt!.name ? appt!.name : `${appt!.start} - ${appt!.end}`}</b>
                     </div>
                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.9 }}>
-                      {appt.name && <span>{appt.start} - {appt.end} · </span>}({appt.responsible})
+                      {appt!.name && <span>{appt!.start} - {appt!.end} · </span>}({appt!.responsible})
                     </div>
                   </div>
                 );
@@ -410,8 +479,7 @@ export default function CalendarPage() {
                 </button>
               </form>
 
-              {/* ---- Month config editor (admin only) ---- 
-              TODO: this modal is not responsive, the starte end an min input overflow on phones*/}
+              {/* ---- Month config editor (admin only) ---- */}
               {isAdmin && (
                 <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#f5f3ff', border: '1px solid #c4b5fd', borderRadius: '8px' }}>
                   <h4 style={{ color: '#6b21a8', marginBottom: '1rem' }}> Monatskonfiguration (Admin)</h4>
@@ -432,7 +500,7 @@ export default function CalendarPage() {
                   )}
 
                   <form onSubmit={handleUpdateMonth} style={{ display: 'grid', gap: '1rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: smallScreen ? '1fr' : '1fr 1fr 1fr', gap: '1rem' }}>
                       <div>
                         <label style={labelStyle}>Kernzeit Beginn</label>
                         <input type="time" value={monthForm.corehours_start}
