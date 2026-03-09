@@ -2,7 +2,7 @@
 
 import { Appointment, AppointmentType, MonthConfig } from '@/types';
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -13,41 +13,41 @@ const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false }
 const devMode = process.env.NODE_ENV !== 'production';
 
 const APPOINTMENT_COLORS: Record<AppointmentType, string> = {
-  session:  '#e66767',
-  event:    '#4f8ef7',
+  session: '#e66767',
+  event: '#4f8ef7',
   workshop: '#52c41a',
-  other:    '#faad14',
+  other: '#faad14',
 };
 
 const APPOINTMENT_LABELS: Record<AppointmentType, string> = {
-  session:  'Session',
-  event:    'Event',
+  session: 'Session',
+  event: 'Event',
   workshop: 'Workshop',
-  other:    'Sonstiges',
+  other: 'Sonstiges',
 };
 
 function mapAppointmentsToEvents(appointments: Appointment[]) {
   return appointments.map((appt, index) => ({
     id: String(index),
-    title: `${appt.start}-${appt.end} (${appt.responsible})`,
+    title: `${appt.start} - ${appt.end} (${appt.responsible})`,
     start: `${appt.date}T${appt.start}`,
-    end:   `${appt.date}T${appt.end}`,
+    end: `${appt.date}T${appt.end}`,
     backgroundColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
-    borderColor:     APPOINTMENT_COLORS[appt.type] ?? '#888888',
-    textColor:       '#ffffff',
-    extendedProps:   { appointment: appt, index },
+    borderColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
+    textColor: '#ffffff',
+    extendedProps: { appointment: appt, index },
   }));
 }
 
 const apiBase = (path: string) =>
   devMode ? `http://localhost:1234/${path}` : `/php_spielerei/${path}`;
 
-async function apiFetch(path: string, body: object) {
+async function apiFetch(path: string, body: object) { // TODO: in readonly-view or only platzwart-auth we want to merge overlapping sessions into one event and a list of the diffferent responsibles
   const res = await fetch(apiBase(path), {
-    method:      'POST',
-    headers:     { 'Content-Type': 'application/json' },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body:        JSON.stringify(body),
+    body: JSON.stringify(body),
   });
   return res.json();
 }
@@ -82,24 +82,24 @@ const emptyForm = { date: '', start: '', end: '', type: 'session' as Appointment
 
 export default function CalendarPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [months, setMonths]             = useState<MonthConfig[]>([]);
-  const [loggedIn, setLoggedIn]         = useState(false);
-  const [loginForm, setLoginForm]       = useState({ username: '', password: '' });
-  const [loginError, setLoginError]     = useState('');
-  const [roles, setRoles]               = useState<string[]>([]);
-  const [smallScreen, setSmallScreen]   = useState(false);
-  const [form, setForm]                 = useState(emptyForm);
-  const [editModal, setEditModal]       = useState<EditModal>(null);
+  const [months, setMonths] = useState<MonthConfig[]>([]);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginError, setLoginError] = useState('');
+  const [roles, setRoles] = useState<string[]>([]);
+  const [smallScreen, setSmallScreen] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [editModal, setEditModal] = useState<EditModal>(null);
 
   // Month-config admin form
-  const [selMonth, setSelMonth]     = useState<number>(1);
-  const [monthForm, setMonthForm]   = useState({ min_gap_mins: 120, corehours_start: '09:00', corehours_end: '17:00' });
+  const [selMonth, setSelMonth] = useState<number>(1);
+  const [monthForm, setMonthForm] = useState({ min_gap_mins: 120, corehours_start: '09:00', corehours_end: '17:00' });
   const [monthFormMsg, setMonthFormMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const isAdmin     = roles.includes('admin');
-  const isDev       = roles.includes('dev');
+  const isAdmin = roles.includes('admin');
+  const isDev = roles.includes('dev');
   const isPlatzwart = roles.includes('platzwart');
-  const canWrite    = isAdmin || isPlatzwart || isDev;
+  const canWrite = isAdmin || isPlatzwart || isDev;
   const canChooseType = isAdmin || isDev;
 
   // Sync monthForm when selected month changes
@@ -131,8 +131,8 @@ export default function CalendarPage() {
   useEffect(() => {
     fetch(apiBase('check_session.php'), { credentials: 'include' })
       .then(res => { if (res.status === 200) return res.json(); throw new Error('Not logged in'); })
-      .then(data => { setLoggedIn(true); setRoles(data.roles || []); })
-      .catch(() => setLoggedIn(false));
+      .then(data => { setRoles(data.roles || []); })
+      .catch(() => setRoles([]));
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -146,16 +146,15 @@ export default function CalendarPage() {
       });
       const data = await res.json();
       if (!res.ok) { setLoginError(data.error || 'Login fehlgeschlagen'); return; }
-      setLoggedIn(true);
       setRoles(data.roles || []);
     } catch { setLoginError('Netzwerk- oder Serverfehler'); }
   };
 
   const handleLogout = async () => {
     try {
-      const res  = await fetch(apiBase('logout.php'), { method: 'POST', credentials: 'include' });
+      const res = await fetch(apiBase('logout.php'), { method: 'POST', credentials: 'include' });
       const data = await res.json();
-      if (data.success) { setLoggedIn(false); setRoles([]); }
+      if (data.success) { setRoles([]); }
     } catch (err) { console.error('Logout failed', err); }
   };
 
@@ -164,9 +163,9 @@ export default function CalendarPage() {
     if (!canWrite) return;
     const { startStr, endStr, allDay } = selectInfo;
     const date = startStr.split('T')[0];
-    const fmt  = (s: string) => s.includes('T') ? s.split('T')[1].substring(0, 5) : '';
+    const fmt = (s: string) => s.includes('T') ? s.split('T')[1].substring(0, 5) : '';
     setForm(f => ({ ...f, date, start: allDay ? '' : fmt(startStr), end: allDay ? '' : fmt(endStr) }));
-    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -227,8 +226,8 @@ export default function CalendarPage() {
     } catch { setMonthFormMsg({ ok: false, text: 'Netzwerkfehler' }); }
   };
 
-  const selMonthCfg    = months.find(m => m.month === selMonth);
-  const selMonthHasSessions = appointments.some(a => a.type === 'session' && a.month === selMonth);
+  const selMonthCfg = months.find(m => m.month === selMonth);
+  const selMonthHasSessions = appointments.some(a => a.type === 'session' && a.month === selMonth);// TODO: only check for sessions in the current year as we store also the ones from the past years
 
   const activeCfg = form.type === 'session'
     ? months.find(m => m.month === (form.date ? new Date(form.date).getMonth() + 1 : 0))
@@ -252,7 +251,7 @@ export default function CalendarPage() {
           {/* Tip banner */}
           {canWrite && (
             <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '6px', padding: '0.75rem 1rem', marginBottom: '1rem', color: '#0c4a6e', fontSize: '0.9rem' }}>
-               <strong>Tipp:</strong> In der Wochenansicht klicken und ziehen um einen Zeitslot auszuwählen. Du kannst auch das Formular manuell ausfüllen.
+              <strong>Tipp:</strong> In der Wochenansicht klicken und ziehen um einen Zeitslot auszuwählen. Du kannst auch das Formular manuell ausfüllen.
               {devMode && <span style={{ marginLeft: '1rem', color: '#e66767', fontWeight: 'bold' }}>[DEV MODE]</span>}
               {isAdmin && <span style={{ marginLeft: '1rem', color: '#6b21a8', fontWeight: 'bold' }}>[ADMIN  Klick auf Termin zum Bearbeiten]</span>}
             </div>
@@ -299,9 +298,9 @@ export default function CalendarPage() {
                   : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' }
               }
               eventDidMount={(info) => {
-                info.el.style.width        = '85%';
-                info.el.style.boxSizing    = 'border-box';
-                info.el.style.cursor       = isAdmin ? 'pointer' : 'default';
+                info.el.style.width = '85%';
+                info.el.style.boxSizing = 'border-box';
+                info.el.style.cursor = isAdmin ? 'pointer' : 'default';
               }}
               buttonText={{ today: 'Heute', month: 'Monat', week: 'Woche', day: 'Tag', list: 'Liste' }}
               validRange={{ start: new Date().toISOString().split('T')[0] }}
@@ -311,7 +310,7 @@ export default function CalendarPage() {
                 if (!appt) {
                   // Mirror event shown during drag-select – render a simple placeholder
                   return (
-                    <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}>
+                    <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}> 
                       <b>Neuer Termin</b>
                     </div>
                   );
@@ -320,10 +319,10 @@ export default function CalendarPage() {
                 return (
                   <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}>
                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                      <b>{appt.name ? appt.name : `${typeLabel}: ${appt.start}–${appt.end}`}</b>
+                      <b>{appt.name ? appt.name : `${appt.start} - ${appt.end}`}</b>
                     </div>
                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.9 }}>
-                      {appt.name && <span>{appt.start}–{appt.end} · </span>}{appt.responsible}
+                      {appt.name && <span>{appt.start} - {appt.end} · </span>}({appt.responsible})
                     </div>
                   </div>
                 );
@@ -334,7 +333,7 @@ export default function CalendarPage() {
 
           {/* ---- Add-appointment form (logged in with write role) ---- */}
           {canWrite ? (
-            <div className="cms-section" style={{ marginTop: '3rem' }}>
+            <div ref={formRef} className="cms-section" style={{ marginTop: '3rem' }}>
               <div className="cms-header">
                 <div>
                   <h3 style={{ color: '#dc2626', marginBottom: '0.5rem' }}>Neuen Termin eintragen</h3>
@@ -400,9 +399,9 @@ export default function CalendarPage() {
                 {/* Session hint: core hours & gap */}
                 {form.type === 'session' && form.date && activeCfg && (
                   <div style={{ background: '#fefce8', border: '1px solid #fde047', borderRadius: '6px', padding: '0.75rem', fontSize: '0.85rem', color: '#713f12' }}>
-                     <strong>Monat {activeCfg.month_name}:</strong>&nbsp;
-                    Kernzeiten {activeCfg.corehours_start}{activeCfg.corehours_end} |&nbsp;
-                    Min. Abstand: {activeCfg.min_gap_mins === 0 ? 'kein Abstand erlaubt (angrenzend)' : `${activeCfg.min_gap_mins} Minuten`}
+                    <strong>Monat {activeCfg.month_name}:</strong>&nbsp;
+                    Kernzeiten {activeCfg.corehours_start} bis {activeCfg.corehours_end} |&nbsp;
+                    Min. Abstand (wenn nicht angrenzend/überlappend): {activeCfg.min_gap_mins === 0 ? 'kein Abstand erlaubt (angrenzend)' : `${activeCfg.min_gap_mins} Minuten`}
                   </div>
                 )}
 
@@ -411,7 +410,8 @@ export default function CalendarPage() {
                 </button>
               </form>
 
-              {/* ---- Month config editor (admin only) ---- */}
+              {/* ---- Month config editor (admin only) ---- 
+              TODO: this modal is not responsive, the starte end an min input overflow on phones*/}
               {isAdmin && (
                 <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#f5f3ff', border: '1px solid #c4b5fd', borderRadius: '8px' }}>
                   <h4 style={{ color: '#6b21a8', marginBottom: '1rem' }}> Monatskonfiguration (Admin)</h4>
@@ -427,7 +427,7 @@ export default function CalendarPage() {
 
                   {selMonthHasSessions && (
                     <div style={{ padding: '0.6rem 0.8rem', background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '6px', color: '#991b1b', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                       Es gibt bereits Sessions in diesem Monat  die Konfiguration kann nicht mehr geändert werden.
+                      Es gibt bereits Sessions in diesem Monat  die Konfiguration kann nicht mehr geändert werden.
                     </div>
                   )}
 
@@ -457,10 +457,12 @@ export default function CalendarPage() {
                       Konfiguration speichern
                     </button>
                     {monthFormMsg && (
-                      <div style={{ padding: '0.6rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem',
+                      <div style={{
+                        padding: '0.6rem 0.8rem', borderRadius: '6px', fontSize: '0.85rem',
                         background: monthFormMsg.ok ? '#f0fdf4' : '#fef2f2',
                         border: `1px solid ${monthFormMsg.ok ? '#86efac' : '#fca5a5'}`,
-                        color: monthFormMsg.ok ? '#166534' : '#991b1b' }}>
+                        color: monthFormMsg.ok ? '#166534' : '#991b1b'
+                      }}>
                         {monthFormMsg.text}
                       </div>
                     )}
@@ -472,11 +474,13 @@ export default function CalendarPage() {
             /* ---- Login section ---- */
             <div className="login-form" style={{ marginTop: '3rem', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
               <details style={{ cursor: 'pointer' }}>
-                <summary style={{ fontWeight: '600', color: '#2d3748', fontSize: '1rem', marginBottom: '1rem',
-                  cursor: 'pointer', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8f9fa' }}
+                <summary style={{
+                  fontWeight: '600', color: '#2d3748', fontSize: '1rem', marginBottom: '1rem',
+                  cursor: 'pointer', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8f9fa'
+                }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#fee2e2')}
                   onMouseLeave={e => (e.currentTarget.style.background = '#f8f9fa')}>
-                   Admin/Platzwart Login
+                  Admin/Platzwart Login
                 </summary>
                 <form onSubmit={handleLogin} style={{ display: 'grid', gap: '1.5rem', marginTop: '1rem' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
