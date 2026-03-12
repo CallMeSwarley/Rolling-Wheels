@@ -1,6 +1,6 @@
 # Rolling Wheels – Homepage
 
-A website for SV Lohhof Rolling Wheels, built with [Next.js](https://nextjs.org) and Tailwind CSS. It includes an event calendar, image gallery, workshop info, and a contact page.
+A website for SV Lohhof Rolling Wheels, built with [Next.js](https://nextjs.org) and Tailwind CSS. It includes an event calendar, image gallery, workshop info, a contact page and a php backend.
 
 ## Demo
 
