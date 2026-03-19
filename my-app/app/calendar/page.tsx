@@ -407,7 +407,7 @@ export default function CalendarPage() {
                 <div>
                   <h3 style={{ color: '#dc2626', marginBottom: '0.5rem' }}>Neuen Termin eintragen</h3>
                   <p style={{ color: '#718096', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                    Sessions: Mindestdauer 2 Stunden. Kernzeiten und Abstände gelten je nach Monatskonfiguration.
+                    Sessions: Mindestdauer 2 Stunden. Kernzeiten und Abstände gelten je nach Monatskonfiguration. Keine Ueberschneidung mit Event/Workshop erlaubt.
                   </p>
                 </div>
                 <button onClick={handleLogout} className="btn-logout">Logout</button>

@@ -136,6 +136,24 @@ function insertAppointment($calendarFilePath, $monthFilePath, $newAppt) {
     }
 
     if ($newAppt['type'] === 'session') {
+        // Sessions must not overlap existing events/workshops on the same day. # TODO: TEST and then Upload to server
+        foreach ($appointments as $a) {
+            if ($a['date'] !== $newAppt['date']) continue;
+            if (!in_array($a['type'], ['event', 'workshop'])) continue;
+
+            $aStartTs = strtotime($newAppt['date'] . ' ' . $a['start']);
+            $aEndTs   = strtotime($newAppt['date'] . ' ' . $a['end']);
+
+            // Strict overlap: touching borders is allowed (before/after), crossing is not.
+            if ($newStartTs < $aEndTs && $newEndTs > $aStartTs) {
+                flock($fp, LOCK_UN); fclose($fp);
+                return [
+                    'error' => "Session conflicts with existing {$a['type']} ({$a['start']}-{$a['end']}). It must be fully before or after.",
+                    'appointments' => $appointments
+                ];
+            }
+        }
+
         // --- Minimum duration: 2 hours ---
         if (($newEndTs - $newStartTs) / 60 < 120) {
             flock($fp, LOCK_UN); fclose($fp);
