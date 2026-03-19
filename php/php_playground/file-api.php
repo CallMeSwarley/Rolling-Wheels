@@ -29,8 +29,29 @@ error_log("Received action: " . $action);
 // =====================================================================
 if ($action === 'read_calendar') {
     if (file_exists($calendarFilePath)) {
-        $content = file_get_contents($calendarFilePath);
-        echo json_encode(['success' => true, 'content' => $content]);
+        $appointments = json_decode(file_get_contents($calendarFilePath), true) ?: [];
+        $publicAppointments = sanitizeAppointmentsForPublic($appointments);
+        echo json_encode(['success' => true, 'appointments' => $publicAppointments]);
+    } else {
+        echo json_encode(['success' => false, 'error' => 'File not found']);
+    }
+    exit;
+}
+
+if ($action === 'read_calendar_admin') {
+    if (empty($_SESSION['loggedin'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Not authenticated', 'loggedin' => $_SESSION['loggedin']]);
+        exit;
+    }
+    if (!in_array('admin', $_SESSION['roles'] ?? [])) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Access denied: admin only.']);
+        exit;
+    }
+    if (file_exists($calendarFilePath)) {
+        $appointments = json_decode(file_get_contents($calendarFilePath), true) ?: [];
+        echo json_encode(['success' => true, 'appointments' => $appointments]);
     } else {
         echo json_encode(['success' => false, 'error' => 'File not found']);
     }
@@ -97,6 +118,12 @@ function validateDateFormat($date) {
     return (bool) preg_match('/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', $date);
 }
 
+function isFutureDateTime($date, $time) {
+    $ts = strtotime($date . ' ' . $time);
+    if ($ts === false) return false;
+    return $ts > time();
+}
+
 function getMonthConfig($monthFilePath, $monthNum) {
     $months = loadJSON($monthFilePath);
     foreach ($months as $m) {
@@ -109,6 +136,30 @@ function sortAppointments(&$appointments) {
     usort($appointments, function ($a, $b) {
         return strtotime($a['date'] . ' ' . $a['start']) - strtotime($b['date'] . ' ' . $b['start']);
     });
+}
+
+function sanitizeAppointmentsForPublic($appointments) {
+    $public = [];
+    foreach ($appointments as $appt) {
+        $clean = $appt;
+        unset($clean['responsible']);
+
+        if (($appt['type'] ?? '') === 'session' && !empty($appt['showUsername']) && !empty($appt['responsible'])) {
+            $clean['displayName'] = $appt['responsible'];
+        }
+
+        if (!isset($clean['displayName'])) {
+            unset($clean['displayName']);
+        }
+
+        $public[] = $clean;
+    }
+    return $public;
+}
+
+function appointmentsForResponse($appointments, $isAdmin) {
+    if ($isAdmin) return $appointments;
+    return sanitizeAppointmentsForPublic($appointments);
 }
 
 /**
@@ -136,7 +187,7 @@ function insertAppointment($calendarFilePath, $monthFilePath, $newAppt) {
     }
 
     if ($newAppt['type'] === 'session') {
-        // Sessions must not overlap existing events/workshops on the same day. # TODO: TEST and then Upload to server
+        // Sessions must not overlap existing events/workshops on the same day.
         foreach ($appointments as $a) {
             if ($a['date'] !== $newAppt['date']) continue;
             if (!in_array($a['type'], ['event', 'workshop'])) continue;
@@ -334,16 +385,31 @@ if ($action === 'add_appointment') {
         exit;
     }
 
+    if (!isFutureDateTime($appt['date'], $appt['start'])) {
+        echo json_encode(['success' => false, 'error' => 'Appointments must be in the future']);
+        exit;
+    }
+
     $appt['month'] = (int) date('n', strtotime($appt['date']));
+
+    if ($appt['type'] === 'session') {
+        $appt['showUsername'] = !empty($appt['showUsername']);
+    } else {
+        unset($appt['showUsername']);
+    }
 
     error_log("add_appointment: " . print_r($appt, true));
 
     $result = insertAppointment($calendarFilePath, $monthFilePath, $appt);
 
     if (is_array($result) && isset($result['error'])) {
-        echo json_encode(['success' => false, 'error' => $result['error'], 'appointments' => $result['appointments']]);
+        echo json_encode([
+            'success' => false,
+            'error' => $result['error'],
+            'appointments' => appointmentsForResponse($result['appointments'], $isAdmin)
+        ]);
     } else {
-        echo json_encode(['success' => true, 'appointments' => $result]);
+        echo json_encode(['success' => true, 'appointments' => appointmentsForResponse($result, $isAdmin)]);
     }
     exit;
 }
@@ -421,6 +487,11 @@ if ($action === 'edit_appointment') {
         exit;
     }
 
+    if (!isFutureDateTime($updated['date'], $updated['start'])) {
+        echo json_encode(['success' => false, 'error' => 'Appointments must be in the future']);
+        exit;
+    }
+
     $fp = fopen($calendarFilePath, 'c+');
     if (!$fp) { echo json_encode(['success' => false, 'error' => 'Cannot open file']); exit; }
     if (!flock($fp, LOCK_EX)) { fclose($fp); echo json_encode(['success' => false, 'error' => 'Cannot lock file']); exit; }
@@ -452,6 +523,12 @@ if ($action === 'edit_appointment') {
         }
     } else {
         unset($updated['name']);
+    }
+
+    if ($updated['type'] === 'session') {
+        $updated['showUsername'] = !empty($appointments[$index]['showUsername']);
+    } else {
+        unset($updated['showUsername']);
     }
 
     $appointments[$index] = $updated;
@@ -489,10 +566,12 @@ if ($action === 'update_month') {
         exit;
     }
 
-    // Block edit if sessions already exist for this month
+    // Block edit if sessions already exist for this month in the current year
     $appointments = loadJSON($calendarFilePath);
+    $currentYear = (int) date('Y');
     foreach ($appointments as $a) {
-        if ($a['type'] === 'session' && (int)$a['month'] === $monthNum) {
+        $apptYear = isset($a['date']) ? (int) date('Y', strtotime($a['date'])) : 0;
+        if ($a['type'] === 'session' && (int)$a['month'] === $monthNum && $apptYear === $currentYear) {
             echo json_encode(['success' => false, 'error' => "Cannot edit month $monthNum: sessions already exist for this month."]);
             exit;
         }

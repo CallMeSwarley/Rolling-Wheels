@@ -28,28 +28,45 @@ const APPOINTMENT_LABELS: Record<AppointmentType, string> = {
 
 type MergedSession = { date: string; start: string; end: string; responsibles: { name: string; end: string }[] };
 
-function mapAppointmentsToEvents(appointments: Appointment[], mergeOverlappingSessions = false) {
+function mapAppointmentsToEvents(
+  appointments: Appointment[],
+  {
+    mergeOverlappingSessions = false,
+    includePast = false,
+    showAdminNames = false,
+  }: { mergeOverlappingSessions?: boolean; includePast?: boolean; showAdminNames?: boolean } = {}
+) {
   const today = new Date().toISOString().split('T')[0];
-  const indexed = appointments
-    .map((appt, index) => ({ appt, index }))
-    .filter(({ appt }) => appt.date >= today);
+  const indexed = appointments.map((appt, index) => ({ appt, index }));
+  const filtered = includePast ? indexed : indexed.filter(({ appt }) => appt.date >= today);
+
+  const getDisplayName = (appt: Appointment) => {
+    if (showAdminNames) return appt.responsible;
+    if (appt.type === 'session') return appt.displayName;
+    return undefined;
+  };
 
   if (!mergeOverlappingSessions) {
-    return indexed.map(({ appt, index }) => ({
-      id: String(index),
-      title: `${appt.start} - ${appt.end} (${appt.responsible})`,
-      start: `${appt.date}T${appt.start}`,
-      end: `${appt.date}T${appt.end}`,
-      backgroundColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
-      borderColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
-      textColor: '#ffffff',
-      extendedProps: { appointment: appt, index },
-    }));
+    return filtered.map(({ appt, index }) => {
+      const displayName = getDisplayName(appt);
+      const titleBase = appt.name ? appt.name : `${appt.start} - ${appt.end}`;
+      const title = displayName ? `${titleBase} (${displayName})` : titleBase;
+      return {
+        id: String(index),
+        title,
+        start: `${appt.date}T${appt.start}`,
+        end: `${appt.date}T${appt.end}`,
+        backgroundColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
+        borderColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
+        textColor: '#ffffff',
+        extendedProps: { appointment: appt, index },
+      };
+    });
   }
 
   // Split sessions and non-sessions
-  const sessions = indexed.filter(({ appt }) => appt.type === 'session');
-  const others = indexed.filter(({ appt }) => appt.type !== 'session');
+  const sessions = filtered.filter(({ appt }) => appt.type === 'session');
+  const others = filtered.filter(({ appt }) => appt.type !== 'session');
 
   // Sort sessions by date + start time
   const sorted = [...sessions].sort((a, b) =>
@@ -62,16 +79,25 @@ function mapAppointmentsToEvents(appointments: Appointment[], mergeOverlappingSe
     const last = mergedGroups[mergedGroups.length - 1];
     if (last && last.date === appt.date && appt.start <= last.end) {
       if (appt.end > last.end) last.end = appt.end;
-      last.responsibles.push({ name: appt.responsible, end: appt.end });
+      const displayName = getDisplayName(appt);
+      if (displayName) last.responsibles.push({ name: displayName, end: appt.end });
     } else {
-      mergedGroups.push({ date: appt.date, start: appt.start, end: appt.end, responsibles: [{ name: appt.responsible, end: appt.end }] });
+      const displayName = getDisplayName(appt);
+      mergedGroups.push({
+        date: appt.date,
+        start: appt.start,
+        end: appt.end,
+        responsibles: displayName ? [{ name: displayName, end: appt.end }] : [],
+      });
     }
   }
 
   return [
     ...mergedGroups.map((m, i) => ({
       id: `merged-session-${i}`,
-      title: m.responsibles.map(r => `${r.name} → ${r.end}`).join(', '),
+      title: m.responsibles.length
+        ? m.responsibles.map(r => `${r.name} → ${r.end}`).join(', ')
+        : `${m.start} - ${m.end}`,
       start: `${m.date}T${m.start}`,
       end: `${m.date}T${m.end}`,
       backgroundColor: APPOINTMENT_COLORS['session'],
@@ -81,7 +107,11 @@ function mapAppointmentsToEvents(appointments: Appointment[], mergeOverlappingSe
     })),
     ...others.map(({ appt, index }) => ({
       id: String(index),
-      title: `${appt.start} - ${appt.end} (${appt.responsible})`,
+      title: (() => {
+        const displayName = getDisplayName(appt);
+        const base = appt.name ? appt.name : `${appt.start} - ${appt.end}`;
+        return displayName ? `${base} (${displayName})` : base;
+      })(),
       start: `${appt.date}T${appt.start}`,
       end: `${appt.date}T${appt.end}`,
       backgroundColor: APPOINTMENT_COLORS[appt.type] ?? '#888888',
@@ -109,6 +139,10 @@ async function loadCalendar() {
   return apiFetch('file-api.php', { action: 'read_calendar' });
 }
 
+async function loadCalendarAdmin() {
+  return apiFetch('file-api.php', { action: 'read_calendar_admin' });
+}
+
 async function loadMonths() {
   return apiFetch('file-api.php', { action: 'read_months' });
 }
@@ -131,7 +165,7 @@ async function updateMonthConfig(month: Partial<MonthConfig> & { month: number }
 
 type EditModal = { appointment: Appointment; index: number } | null;
 
-const emptyForm = { date: '', start: '', end: '', type: 'session' as AppointmentType, name: '' };
+const emptyForm = { date: '', start: '', end: '', type: 'session' as AppointmentType, name: '', showUsername: false };
 
 export default function CalendarPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -139,6 +173,7 @@ export default function CalendarPage() {
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [roles, setRoles] = useState<string[]>([]);
+  const [currentUsername, setCurrentUsername] = useState('');
   const [smallScreen, setSmallScreen] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState(emptyForm);
@@ -168,13 +203,17 @@ export default function CalendarPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Load calendar data
+  // Load calendar data (public or admin)
   useEffect(() => {
-    loadCalendar().then(data => {
-      if (data.success) setAppointments(JSON.parse(data.content));
+    const load = async () => {
+      const data = isAdmin ? await loadCalendarAdmin() : await loadCalendar();
+      if (data.success) setAppointments(data.appointments || []);
       else console.error('Error loading calendar:', data.error);
-    }).catch(console.error);
+    };
+    load().catch(console.error);
+  }, [isAdmin]);
 
+  useEffect(() => {
     loadMonths().then(data => {
       if (data.success) setMonths(data.months);
     }).catch(console.error);
@@ -184,8 +223,14 @@ export default function CalendarPage() {
   useEffect(() => {
     fetch(apiBase('check_session.php'), { credentials: 'include' })
       .then(res => { if (res.status === 200) return res.json(); throw new Error('Not logged in'); })
-      .then(data => { setRoles(data.roles || []); })
-      .catch(() => setRoles([]));
+      .then(data => {
+        setRoles(data.roles || []);
+        setCurrentUsername(data.username || '');
+      })
+      .catch(() => {
+        setRoles([]);
+        setCurrentUsername('');
+      });
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -200,6 +245,7 @@ export default function CalendarPage() {
       const data = await res.json();
       if (!res.ok) { setLoginError(data.error || 'Login fehlgeschlagen'); return; }
       setRoles(data.roles || []);
+      setCurrentUsername(loginForm.username);
     } catch { setLoginError('Netzwerk- oder Serverfehler'); }
   };
 
@@ -207,7 +253,7 @@ export default function CalendarPage() {
     try {
       const res = await fetch(apiBase('logout.php'), { method: 'POST', credentials: 'include' });
       const data = await res.json();
-      if (data.success) { setRoles([]); }
+      if (data.success) { setRoles([]); setCurrentUsername(''); }
     } catch (err) { console.error('Logout failed', err); }
   };
 
@@ -226,6 +272,7 @@ export default function CalendarPage() {
     if (!form.date || !form.start || !form.end) return;
     try {
       const apptPayload: Omit<Appointment, 'responsible' | 'month'> = { date: form.date, start: form.start, end: form.end, type: form.type };
+      if (form.type === 'session') apptPayload.showUsername = !!form.showUsername;
       if (form.name.trim()) apptPayload.name = form.name.trim();
       const result = await addAppointment(apptPayload);
       if (result.appointments) setAppointments(result.appointments);
@@ -239,7 +286,7 @@ export default function CalendarPage() {
   const handleEventClick = (clickInfo: any) => {
     if (!isAdmin) return;
     const { appointment, index } = clickInfo.event.extendedProps;
-    setEditModal({ appointment: { ...appointment }, index });
+    setEditModal({ appointment: { ...appointment, showUsername: !!appointment?.showUsername }, index });
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -289,7 +336,11 @@ export default function CalendarPage() {
     ? months.find(m => m.month === (form.date ? new Date(form.date).getMonth() + 1 : 0))
     : null;
 
-  const calendarEvents = mapAppointmentsToEvents(appointments, !isAdmin && !isDev);
+  const calendarEvents = mapAppointmentsToEvents(appointments, {
+    mergeOverlappingSessions: !isAdmin && !isDev,
+    includePast: isAdmin,
+    showAdminNames: isAdmin,
+  });
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '0.8rem',
@@ -360,7 +411,7 @@ export default function CalendarPage() {
                 info.el.style.cursor = isAdmin ? 'pointer' : 'default';
               }}
               buttonText={{ today: 'Heute', month: 'Monat', week: 'Woche', day: 'Tag', list: 'Liste' }}
-              validRange={{ start: new Date().toISOString().split('T')[0] }}
+              validRange={isAdmin ? undefined : { start: new Date().toISOString().split('T')[0] }}
               selectConstraint={{ start: new Date().toISOString().split('T')[0], startTime: '08:00:00', endTime: '23:30:00' }}
               eventContent={(arg) => {
                 const appt: Appointment | null = arg.event.extendedProps.appointment;
@@ -377,21 +428,29 @@ export default function CalendarPage() {
                   return (
                     <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}>
                       <b>{mergedSession.start} – {mergedSession.end}</b>
-                      {mergedSession.responsibles.map((r, i) => (
-                        <div key={i} style={{ whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.9 }}>
-                          {r.name} → {r.end}
+                      {mergedSession.responsibles.length > 0 ? (
+                        mergedSession.responsibles.map((r, i) => (
+                          <div key={i} style={{ whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.9 }}>
+                            {r.name} → {r.end}
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.9 }}>
+                          Session
                         </div>
-                      ))}
+                      )}
                     </div>
                   );
                 }
+                const displayName = isAdmin ? appt!.responsible : appt!.displayName;
                 return (
                   <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}>
                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
                       <b>{appt!.name ? appt!.name : `${appt!.start} - ${appt!.end}`}</b>
                     </div>
                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.9 }}>
-                      {appt!.name && <span>{appt!.start} - {appt!.end} · </span>}({appt!.responsible})
+                      {appt!.name && <span>{appt!.start} - {appt!.end}</span>}
+                      {displayName && <span>{appt!.name ? ' · ' : ''}{displayName}</span>}
                     </div>
                   </div>
                 );
@@ -462,6 +521,25 @@ export default function CalendarPage() {
                       placeholder={`Name des ${APPOINTMENT_LABELS[form.type]}s`}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                       required style={inputStyle} />
+                  </div>
+                )}
+
+                {form.type === 'session' && (
+                  <div style={{ display: 'grid', gap: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', color: '#2d3748' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!form.showUsername}
+                        onChange={e => setForm(f => ({ ...f, showUsername: e.target.checked }))}
+                      />
+                      Benutzername mit Termin anzeigen
+                    </label>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                      Wenn du das aktivierst, wird dein Benutzername ("<b>{currentUsername || 'mustermann'}</b>")
+                      in der Kalenderansicht für diesen Termin angezeigt, damit Gäste sehen können wer aufsperrt.
+                      Für Administratoren (Abteilungsleitung) ist er immer sichtbar, damit nachvollzogen werden kann, wer den Termin übernimmt.
+                      Du kannst diese Einstellung für jeden Termin individuell festlegen.
+                    </div>
                   </div>
                 )}
 
@@ -613,6 +691,19 @@ export default function CalendarPage() {
                       <input type="text" value={editModal.appointment.name ?? ''}
                         onChange={e => setEditModal(m => m && ({ ...m, appointment: { ...m.appointment, name: e.target.value } }))}
                         required style={inputStyle} />
+                    </div>
+                  )}
+                  {editModal.appointment.type === 'session' && (
+                    <div>
+                      <label style={labelStyle}>Benutzername mit Termin anzeigen</label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', color: '#2d3748' }}>
+                        <input
+                          type="checkbox"
+                          checked={!!editModal.appointment.showUsername}
+                          disabled
+                        />
+                        Zustimmung liegt {!editModal.appointment.showUsername ? 'nicht' : ''} vor - Einstellung kann nachträglich nicht geändert werden
+                      </label>
                     </div>
                   )}
                   <div style={{ fontSize: '0.85rem', color: '#64748b' }}>

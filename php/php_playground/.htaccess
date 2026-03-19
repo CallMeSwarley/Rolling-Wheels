@@ -1,8 +1,11 @@
 # Backend-only directory: PHP endpoints and sensitive user data
 # Location: /rumprobiert/php_spielerei
 
-# Explicitly deny access to the user data file
+# Explicitly deny access to the data files
 <Files "user.xml">
+    Require all denied
+</Files>
+<Files "calendar_data.json">
     Require all denied
 </Files>
 

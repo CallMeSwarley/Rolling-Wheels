@@ -12,10 +12,12 @@ export interface Appointment {
   date: string;
   start: string;
   end: string;
-  responsible: string;
+  responsible?: string;
   type: AppointmentType;
   month: number;
   name?: string;
+  showUsername?: boolean;
+  displayName?: string;
 }
 
 export interface MonthConfig {
