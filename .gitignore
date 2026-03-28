@@ -12,6 +12,12 @@
 /my-app/.next/
 /my-app/out/
 /my-app/build
+/calendar-app/.next/
+/calendar-app/out/
+/calendar-app/build/
+
+# calendar-app dependencies/cache
+/calendar-app/node_modules/
 
 # production
 /build

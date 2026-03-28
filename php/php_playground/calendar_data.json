@@ -292,6 +292,15 @@
         "month": 3
     },
     {
+        "date": "2026-03-27",
+        "start": "18:00",
+        "end": "21:00",
+        "type": "session",
+        "showUsername": false,
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
         "date": "2026-03-28",
         "start": "12:00",
         "end": "16:00",
@@ -317,6 +326,95 @@
         "showUsername": false,
         "responsible": "bene_test",
         "month": 3
+    },
+    {
+        "date": "2026-03-29",
+        "start": "11:30",
+        "end": "17:00",
+        "type": "session",
+        "showUsername": false,
+        "responsible": "maxi_test",
+        "month": 3
+    },
+    {
+        "date": "2026-04-01",
+        "start": "10:30",
+        "end": "16:30",
+        "type": "workshop",
+        "responsible": "maxi_test",
+        "month": 4
+    },
+    {
+        "date": "2026-04-01",
+        "start": "17:00",
+        "end": "20:00",
+        "type": "session",
+        "showUsername": true,
+        "responsible": "bene_test",
+        "month": 4
+    },
+    {
+        "date": "2026-04-02",
+        "start": "13:30",
+        "end": "17:30",
+        "type": "session",
+        "showUsername": true,
+        "responsible": "maxi_test",
+        "month": 4
+    },
+    {
+        "date": "2026-04-02",
+        "start": "17:30",
+        "end": "21:00",
+        "type": "session",
+        "showUsername": false,
+        "responsible": "maxi_test",
+        "month": 4
+    },
+    {
+        "date": "2026-04-03",
+        "start": "12:00",
+        "end": "17:30",
+        "type": "event",
+        "name": "David Guetta",
+        "responsible": "maxi_test",
+        "month": 4
+    },
+    {
+        "date": "2026-04-03",
+        "start": "18:00",
+        "end": "22:00",
+        "type": "session",
+        "showUsername": false,
+        "responsible": "bene_test",
+        "month": 4
+    },
+    {
+        "date": "2026-04-04",
+        "start": "11:00",
+        "end": "14:30",
+        "type": "session",
+        "showUsername": false,
+        "responsible": "bene_test",
+        "month": 4
+    },
+    {
+        "date": "2026-04-04",
+        "start": "14:30",
+        "end": "17:30",
+        "type": "session",
+        "showUsername": false,
+        "responsible": "bene_test",
+        "month": 4
+    },
+    {
+        "date": "2026-04-04",
+        "start": "17:30",
+        "end": "20:00",
+        "type": "session",
+        "showUsername": false,
+        "responsible": "bene_test",
+        "month": 4
     },
     {
         "date": "2026-04-12",

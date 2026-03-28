@@ -1,5 +1,18 @@
 {
-  "dependencies": {
-    "@fullcalendar/list": "^6.1.19"
+  "name": "rolling-wheels-workspace",
+  "private": true,
+  "workspaces": [
+    "my-app",
+    "calendar-app"
+  ],
+  "scripts": {
+    "dev": "npm run dev:site",
+    "dev:site": "npm --workspace my-app run dev",
+    "dev:calendar": "npm --workspace calendar-app run dev",
+    "build": "npm run build:site",
+    "build:site": "npm --workspace my-app run build",
+    "build:calendar": "npm --workspace calendar-app run build",
+    "start:site": "npm --workspace my-app run start",
+    "start:calendar": "npm --workspace calendar-app run start"
   }
 }
