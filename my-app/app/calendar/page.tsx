@@ -371,6 +371,7 @@ export default function CalendarPage() {
     includePast: isAdmin,
     showAdminNames: isAdmin,
   });
+  const hasLinkedAppointments = appointments.some(a => !!a.url?.trim());
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '0.8rem',
@@ -403,6 +404,12 @@ export default function CalendarPage() {
               </span>
             ))}
           </div>
+
+          {!isLoggedIn && hasLinkedAppointments && (
+            <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '6px', padding: '0.75rem 1rem', marginBottom: '1rem', color: '#166534', fontSize: '0.9rem' }}>
+              <strong>Hinweis:</strong> Termine mit mehr Infos sind anklickbar. Beim Klick oeffnet sich der jeweilige Link in einem neuen Tab.
+            </div>
+          )}
 
           {/* Calendar */}
           <div style={{ margin: smallScreen ? '0 -1rem' : '0', padding: smallScreen ? '0 0.5rem' : '0' }}>
