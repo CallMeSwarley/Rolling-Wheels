@@ -118,6 +118,13 @@ function validateDateFormat($date) {
     return (bool) preg_match('/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/', $date);
 }
 
+function validateHttpUrl($url) {
+    if (!is_string($url) || trim($url) === '') return false;
+    if (!filter_var($url, FILTER_VALIDATE_URL)) return false;
+    $scheme = strtolower(parse_url($url, PHP_URL_SCHEME) ?? '');
+    return in_array($scheme, ['http', 'https'], true);
+}
+
 function isFutureDateTime($date, $time) {
     $ts = strtotime($date . ' ' . $time);
     if ($ts === false) return false;
@@ -143,6 +150,10 @@ function sanitizeAppointmentsForPublic($appointments) {
     foreach ($appointments as $appt) {
         $clean = $appt;
         unset($clean['responsible']);
+
+        if (($clean['type'] ?? '') === 'session') {
+            unset($clean['url']);
+        }
 
         if (($appt['type'] ?? '') === 'session' && !empty($appt['showUsername']) && !empty($appt['responsible'])) {
             $clean['displayName'] = $appt['responsible'];
@@ -370,6 +381,20 @@ if ($action === 'add_appointment') {
         unset($appt['name']);
     }
 
+    if (in_array($appt['type'], ['event', 'other', 'workshop'], true)) {
+        $appt['url'] = trim($appt['url'] ?? '');
+        if (!validateHttpUrl($appt['url'])) {
+            echo json_encode(['success' => false, 'error' => 'Valid URL (http/https) is required for event, workshop and other appointment types']);
+            exit;
+        }
+        if (strlen($appt['url']) > 500) {
+            echo json_encode(['success' => false, 'error' => 'URL must be 500 characters or less']);
+            exit;
+        }
+    } else {
+        unset($appt['url']);
+    }
+
     if (!in_array($appt['type'], APPOINTMENT_TYPES)) {
         echo json_encode(['success' => false, 'error' => 'Invalid type. Allowed: ' . implode(', ', APPOINTMENT_TYPES)]);
         exit;
@@ -523,6 +548,22 @@ if ($action === 'edit_appointment') {
         }
     } else {
         unset($updated['name']);
+    }
+
+    if (in_array($updated['type'], ['event', 'other', 'workshop'], true)) {
+        $updated['url'] = trim($updated['url'] ?? '');
+        if (!validateHttpUrl($updated['url'])) {
+            flock($fp, LOCK_UN); fclose($fp);
+            echo json_encode(['success' => false, 'error' => 'Valid URL (http/https) is required for event, workshop and other appointment types']);
+            exit;
+        }
+        if (strlen($updated['url']) > 500) {
+            flock($fp, LOCK_UN); fclose($fp);
+            echo json_encode(['success' => false, 'error' => 'URL must be 500 characters or less']);
+            exit;
+        }
+    } else {
+        unset($updated['url']);
     }
 
     if ($updated['type'] === 'session') {

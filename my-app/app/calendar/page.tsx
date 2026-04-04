@@ -13,10 +13,10 @@ const FullCalendar = dynamic(() => import('@fullcalendar/react'), { ssr: false }
 const devMode = process.env.NODE_ENV !== 'production';
 
 const APPOINTMENT_COLORS: Record<AppointmentType, string> = {
-  session: '#e66767',
-  event: '#4f8ef7',
-  workshop: '#52c41a',
-  other: '#faad14',
+  session: '#d55e00',
+  event: '#0072b2',
+  workshop: '#009e73',
+  other: '#e69f00',
 };
 
 const APPOINTMENT_LABELS: Record<AppointmentType, string> = {
@@ -25,6 +25,8 @@ const APPOINTMENT_LABELS: Record<AppointmentType, string> = {
   workshop: 'Workshop',
   other: 'Sonstiges',
 };
+
+const WORKSHOP_DEFAULT_URL = 'https://rolling-wheels.net/workshop/';
 
 type MergedSession = { date: string; start: string; end: string; responsibles: { name: string; end: string }[] };
 
@@ -165,7 +167,15 @@ async function updateMonthConfig(month: Partial<MonthConfig> & { month: number }
 
 type EditModal = { appointment: Appointment; index: number } | null;
 
-const emptyForm = { date: '', start: '', end: '', type: 'session' as AppointmentType, name: '', showUsername: false };
+const emptyForm = {
+  date: '',
+  start: '',
+  end: '',
+  type: 'session' as AppointmentType,
+  name: '',
+  url: '',
+  showUsername: false,
+};
 
 export default function CalendarPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -187,6 +197,7 @@ export default function CalendarPage() {
   const isAdmin = roles.includes('admin');
   const isDev = roles.includes('dev');
   const isPlatzwart = roles.includes('platzwart');
+  const isLoggedIn = roles.length > 0;
   const canWrite = isAdmin || isPlatzwart || isDev;
   const canChooseType = isAdmin || isDev;
 
@@ -274,6 +285,7 @@ export default function CalendarPage() {
       const apptPayload: Omit<Appointment, 'responsible' | 'month'> = { date: form.date, start: form.start, end: form.end, type: form.type };
       if (form.type === 'session') apptPayload.showUsername = !!form.showUsername;
       if (form.name.trim()) apptPayload.name = form.name.trim();
+      if (form.type !== 'session') apptPayload.url = form.url.trim();
       const result = await addAppointment(apptPayload);
       if (result.appointments) setAppointments(result.appointments);
       if (!result.success) { alert('Fehler: ' + (result.error || 'Unbekannter Fehler')); return; }
@@ -293,9 +305,10 @@ export default function CalendarPage() {
     e.preventDefault();
     if (!editModal) return;
     try {
-      const { date, start, end, type, name } = editModal.appointment;
+      const { date, start, end, type, name, url } = editModal.appointment;
       const payload: Omit<Appointment, 'responsible' | 'month'> = { date, start, end, type };
       if (name?.trim()) payload.name = name.trim();
+      if (type !== 'session') payload.url = (url ?? '').trim();
       const result = await editAppointment(editModal.index, payload);
       if (result.appointments) setAppointments(result.appointments);
       if (!result.success) { alert('Fehler: ' + (result.error || 'Unbekannter Fehler')); return; }
@@ -335,6 +348,23 @@ export default function CalendarPage() {
   const activeCfg = form.type === 'session'
     ? months.find(m => m.month === (form.date ? new Date(form.date).getMonth() + 1 : 0))
     : null;
+
+  const handleCalendarEventClick = (clickInfo: any) => {
+    if (isAdmin) {
+      handleEventClick(clickInfo);
+      return;
+    }
+    if (isLoggedIn) return;
+
+    const appointment: Appointment | null = clickInfo.event.extendedProps.appointment;
+    const url = appointment?.url?.trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) return;
+
+    clickInfo.jsEvent.preventDefault();
+    const opened = window.open(url, '_blank', 'noopener,noreferrer');
+    if (opened) opened.opener = null;
+  };
 
   const calendarEvents = mapAppointmentsToEvents(appointments, {
     mergeOverlappingSessions: !isAdmin && !isDev,
@@ -406,9 +436,11 @@ export default function CalendarPage() {
                   : { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' }
               }
               eventDidMount={(info) => {
+                const appt: Appointment | null = info.event.extendedProps.appointment;
+                const isPublicLink = !isLoggedIn && !!appt?.url;
                 info.el.style.width = '85%';
                 info.el.style.boxSizing = 'border-box';
-                info.el.style.cursor = isAdmin ? 'pointer' : 'default';
+                info.el.style.cursor = isAdmin || isPublicLink ? 'pointer' : 'default';
               }}
               buttonText={{ today: 'Heute', month: 'Monat', week: 'Woche', day: 'Tag', list: 'Liste' }}
               validRange={isAdmin ? undefined : { start: new Date().toISOString().split('T')[0] }}
@@ -443,6 +475,7 @@ export default function CalendarPage() {
                   );
                 }
                 const displayName = isAdmin ? appt!.responsible : appt!.displayName;
+                const typeLabel = APPOINTMENT_LABELS[appt!.type];
                 return (
                   <div style={{ fontSize: '11px', lineHeight: '1.3', padding: '1px 2px' }}>
                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
@@ -451,11 +484,12 @@ export default function CalendarPage() {
                     <div style={{ whiteSpace: 'normal', wordBreak: 'break-word', opacity: 0.9 }}>
                       {appt!.name && <span>{appt!.start} - {appt!.end}</span>}
                       {displayName && <span>{appt!.name ? ' · ' : ''}{displayName}</span>}
+                      {!displayName && !appt!.name && <span>{typeLabel}</span>}
                     </div>
                   </div>
                 );
               }}
-              eventClick={isAdmin ? handleEventClick : undefined}
+              eventClick={handleCalendarEventClick}
             />
           </div>
 
@@ -501,7 +535,22 @@ export default function CalendarPage() {
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label style={labelStyle}>Typ</label>
                   {canChooseType ? (
-                    <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as AppointmentType }))}
+                    <select
+                      value={form.type}
+                      onChange={e => {
+                        const nextType = e.target.value as AppointmentType;
+                        setForm(f => {
+                          const next = { ...f, type: nextType };
+                          if (nextType === 'session') {
+                            next.url = '';
+                          } else if (nextType === 'workshop') {
+                            if (f.type !== 'workshop' || !f.url.trim()) next.url = WORKSHOP_DEFAULT_URL;
+                          } else if (f.type === 'workshop' && f.url === WORKSHOP_DEFAULT_URL) {
+                            next.url = '';
+                          }
+                          return next;
+                        });
+                      }}
                       style={{ ...inputStyle, background: '#fff', cursor: 'pointer' }}>
                       {(Object.entries(APPOINTMENT_LABELS) as [AppointmentType, string][]).map(([val, lbl]) => (
                         <option key={val} value={val}>{lbl}</option>
@@ -521,6 +570,20 @@ export default function CalendarPage() {
                       placeholder={`Name des ${APPOINTMENT_LABELS[form.type]}s`}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                       required style={inputStyle} />
+                  </div>
+                )}
+
+                {(form.type === 'event' || form.type === 'other' || form.type === 'workshop') && (
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label style={labelStyle}>Link URL</label>
+                    <input
+                      type="url"
+                      value={form.url}
+                      placeholder={form.type === 'workshop' ? WORKSHOP_DEFAULT_URL : 'https://...'}
+                      onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
+                      required
+                      style={inputStyle}
+                    />
                   </div>
                 )}
 
@@ -691,6 +754,18 @@ export default function CalendarPage() {
                       <input type="text" value={editModal.appointment.name ?? ''}
                         onChange={e => setEditModal(m => m && ({ ...m, appointment: { ...m.appointment, name: e.target.value } }))}
                         required style={inputStyle} />
+                    </div>
+                  )}
+                  {(editModal.appointment.type === 'event' || editModal.appointment.type === 'other' || editModal.appointment.type === 'workshop') && (
+                    <div>
+                      <label style={labelStyle}>Link URL</label>
+                      <input
+                        type="url"
+                        value={editModal.appointment.url ?? ''}
+                        onChange={e => setEditModal(m => m && ({ ...m, appointment: { ...m.appointment, url: e.target.value } }))}
+                        required
+                        style={inputStyle}
+                      />
                     </div>
                   )}
                   {editModal.appointment.type === 'session' && (

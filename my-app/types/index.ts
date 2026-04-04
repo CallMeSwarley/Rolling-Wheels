@@ -16,6 +16,7 @@ export interface Appointment {
   type: AppointmentType;
   month: number;
   name?: string;
+  url?: string;
   showUsername?: boolean;
   displayName?: string;
 }
