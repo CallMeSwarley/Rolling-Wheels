@@ -1,5 +1,5 @@
 ﻿"use client";
-
+// TODO: remove core hours check
 import { Appointment, AppointmentType, MonthConfig } from '@/types';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
@@ -166,6 +166,9 @@ async function updateMonthConfig(month: Partial<MonthConfig> & { month: number }
 }
 
 type EditModal = { appointment: Appointment; index: number } | null;
+type PublicDetailsModal = { appointment: Appointment } | null;
+
+const CALENDAR_TIME_ZONE = 'Europe/Berlin';
 
 const emptyForm = {
   date: '',
@@ -176,6 +179,175 @@ const emptyForm = {
   url: '',
   showUsername: false,
 };
+
+function isPublicAppointment(appointment: Appointment | null | undefined): appointment is Appointment {
+  return !!appointment;
+}
+
+function appointmentFromMergedSession(mergedSession: MergedSession): Appointment {
+  return {
+    date: mergedSession.date,
+    start: mergedSession.start,
+    end: mergedSession.end,
+    type: 'session',
+    month: new Date(`${mergedSession.date}T12:00:00`).getMonth() + 1,
+    name: 'Session',
+  };
+}
+
+function getHttpUrl(url?: string) {
+  const trimmed = url?.trim();
+  if (!trimmed) return '';
+  return /^https?:\/\//i.test(trimmed) ? trimmed : '';
+}
+
+function getAppointmentTitle(appointment: Appointment) {
+  return appointment.name?.trim() || APPOINTMENT_LABELS[appointment.type] || 'Termin';
+}
+
+function getAppointmentTimeLabel(appointment: Appointment) {
+  return `${appointment.start} - ${appointment.end}`;
+}
+
+function formatDateLabel(date: string) {
+  const parsed = new Date(`${date}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return date;
+
+  return new Intl.DateTimeFormat('de-DE', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(parsed);
+}
+
+function formatCalendarDateTime(date: string, time: string) {
+  const cleanTime = time.replace(/:/g, '').padEnd(6, '0').slice(0, 6);
+  return `${date.replace(/-/g, '')}T${cleanTime}`;
+}
+
+function formatOutlookDateTime(date: string, time: string) {
+  const cleanTime = time.length === 5 ? `${time}:00` : time;
+  return `${date}T${cleanTime}`;
+}
+
+function getCalendarDetails(appointment: Appointment) {
+  const details = [
+    APPOINTMENT_LABELS[appointment.type] || 'Termin',
+    `${formatDateLabel(appointment.date)}, ${getAppointmentTimeLabel(appointment)}`,
+  ];
+  const infoUrl = getHttpUrl(appointment.url);
+  if (infoUrl) details.push('', `Mehr Informationen: ${infoUrl}`);
+  return details.join('\n');
+}
+
+function buildGoogleCalendarUrl(appointment: Appointment) {
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: getAppointmentTitle(appointment),
+    dates: `${formatCalendarDateTime(appointment.date, appointment.start)}/${formatCalendarDateTime(appointment.date, appointment.end)}`,
+    details: getCalendarDetails(appointment),
+    ctz: CALENDAR_TIME_ZONE,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+function buildOutlookCalendarUrl(appointment: Appointment) {
+  const params = new URLSearchParams({
+    path: '/calendar/action/compose',
+    rru: 'addevent',
+    subject: getAppointmentTitle(appointment),
+    startdt: formatOutlookDateTime(appointment.date, appointment.start),
+    enddt: formatOutlookDateTime(appointment.date, appointment.end),
+    body: getCalendarDetails(appointment),
+    timezone: CALENDAR_TIME_ZONE,
+  });
+
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
+}
+
+function escapeIcsText(value: string) {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/\r?\n/g, '\\n')
+    .replace(/,/g, '\\,')
+    .replace(/;/g, '\\;');
+}
+
+function foldIcsLine(line: string) {
+  const parts: string[] = [];
+  let remaining = line;
+
+  while (remaining.length > 74) {
+    parts.push(remaining.slice(0, 74));
+    remaining = ` ${remaining.slice(74)}`;
+  }
+
+  parts.push(remaining);
+  return parts.join('\r\n');
+}
+
+function getIcsTimestamp() {
+  return new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+}
+
+function getIcsUid(appointment: Appointment) {
+  const raw = `${appointment.type}-${appointment.date}-${appointment.start}-${appointment.end}-${getAppointmentTitle(appointment)}`;
+  const slug = raw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'termin';
+  return `rolling-wheels-${slug}@rolling-wheels.net`;
+}
+
+function buildIcsCalendar(appointment: Appointment) {
+  const infoUrl = getHttpUrl(appointment.url);
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Rolling Wheels//Calendar//DE',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE',
+    `TZID:${CALENDAR_TIME_ZONE}`,
+    `X-LIC-LOCATION:${CALENDAR_TIME_ZONE}`,
+    'BEGIN:DAYLIGHT',
+    'TZOFFSETFROM:+0100',
+    'TZOFFSETTO:+0200',
+    'TZNAME:CEST',
+    'DTSTART:19700329T020000',
+    'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU',
+    'END:DAYLIGHT',
+    'BEGIN:STANDARD',
+    'TZOFFSETFROM:+0200',
+    'TZOFFSETTO:+0100',
+    'TZNAME:CET',
+    'DTSTART:19701025T030000',
+    'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU',
+    'END:STANDARD',
+    'END:VTIMEZONE',
+    'BEGIN:VEVENT',
+    `UID:${getIcsUid(appointment)}`,
+    `DTSTAMP:${getIcsTimestamp()}`,
+    `DTSTART;TZID=${CALENDAR_TIME_ZONE}:${formatCalendarDateTime(appointment.date, appointment.start)}`,
+    `DTEND;TZID=${CALENDAR_TIME_ZONE}:${formatCalendarDateTime(appointment.date, appointment.end)}`,
+    `SUMMARY:${escapeIcsText(getAppointmentTitle(appointment))}`,
+    `DESCRIPTION:${escapeIcsText(getCalendarDetails(appointment))}`,
+    'LOCATION:Rolling Wheels',
+    ...(infoUrl ? [`URL:${infoUrl}`] : []),
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ];
+
+  return `${lines.map(foldIcsLine).join('\r\n')}\r\n`;
+}
+
+function buildIcsFilename(appointment: Appointment) {
+  const titleSlug = getAppointmentTitle(appointment)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '') || 'termin';
+
+  return `rolling-wheels-${appointment.date}-${titleSlug}.ics`;
+}
 
 export default function CalendarPage() {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -189,6 +361,7 @@ export default function CalendarPage() {
   const formRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState(emptyForm);
   const [editModal, setEditModal] = useState<EditModal>(null);
+  const [publicModal, setPublicModal] = useState<PublicDetailsModal>(null);
 
   // Month-config admin form
   const [selMonth, setSelMonth] = useState<number>(1);
@@ -358,13 +531,28 @@ export default function CalendarPage() {
     if (isLoggedIn) return;
 
     const appointment: Appointment | null = clickInfo.event.extendedProps.appointment;
-    const url = appointment?.url?.trim();
-    if (!url) return;
-    if (!/^https?:\/\//i.test(url)) return;
+    const mergedSession: MergedSession | undefined = clickInfo.event.extendedProps.mergedSession;
+    const publicAppointment = isPublicAppointment(appointment)
+      ? appointment
+      : mergedSession
+        ? appointmentFromMergedSession(mergedSession)
+        : null;
+    if (!publicAppointment) return;
 
     clickInfo.jsEvent.preventDefault();
-    const opened = window.open(url, '_blank', 'noopener,noreferrer');
-    if (opened) opened.opener = null;
+    setPublicModal({ appointment: publicAppointment });
+  };
+
+  const handleIcsDownload = (appointment: Appointment) => {
+    const blob = new Blob([buildIcsCalendar(appointment)], { type: 'text/calendar;charset=utf-8' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = buildIcsFilename(appointment);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 0);
   };
 
   const calendarEvents = mapAppointmentsToEvents(appointments, {
@@ -372,7 +560,7 @@ export default function CalendarPage() {
     includePast: isAdmin,
     showAdminNames: isAdmin,
   });
-  const hasLinkedAppointments = appointments.some(a => !!a.url?.trim());
+  const hasPublicAppointments = appointments.some(isPublicAppointment);
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '0.8rem',
@@ -381,6 +569,23 @@ export default function CalendarPage() {
   const labelStyle: React.CSSProperties = {
     display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#2d3748',
   };
+  const publicActionStyle: React.CSSProperties = {
+    display: 'block',
+    width: '100%',
+    padding: '0.8rem',
+    borderRadius: '6px',
+    border: 'none',
+    boxSizing: 'border-box',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '0.95rem',
+    textAlign: 'center',
+    textDecoration: 'none',
+  };
+  const publicAppointment = publicModal?.appointment;
+  const publicInfoUrl = publicAppointment ? getHttpUrl(publicAppointment.url) : '';
+  const publicGoogleUrl = publicAppointment ? buildGoogleCalendarUrl(publicAppointment) : '';
+  const publicOutlookUrl = publicAppointment ? buildOutlookCalendarUrl(publicAppointment) : '';
 
   useEffect(() => {
     const sendHeight = () => {
@@ -434,9 +639,9 @@ export default function CalendarPage() {
             ))}
           </div>
 
-          {!isLoggedIn && hasLinkedAppointments && (
+          {!isLoggedIn && hasPublicAppointments && (
             <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '6px', padding: '0.75rem 1rem', marginBottom: '1rem', color: '#166534', fontSize: '0.9rem' }}>
-              <strong>Hinweis:</strong> Events, Workshops & Sonstiges mit mehr Infos sind anklickbar. Beim Klick öffnet sich der jeweilige Link in einem neuen Tab.
+              <strong>Hinweis:</strong> Termine öffnen beim Klick Details. Dort findest du weitere Infos und/oder Optionen zum eigenen Kalender.
             </div>
           )}
 
@@ -473,10 +678,13 @@ export default function CalendarPage() {
               }
               eventDidMount={(info) => {
                 const appt: Appointment | null = info.event.extendedProps.appointment;
-                const isPublicLink = !isLoggedIn && !!appt?.url;
+                const mergedSession: MergedSession | undefined = info.event.extendedProps.mergedSession;
+                const opensPublicDetails = !isLoggedIn && (isPublicAppointment(appt) || !!mergedSession);
                 info.el.style.width = '85%';
                 info.el.style.boxSizing = 'border-box';
-                info.el.style.cursor = isAdmin || isPublicLink ? 'pointer' : 'default';
+                info.el.style.cursor = isAdmin || opensPublicDetails ? 'pointer' : 'default';
+                if (opensPublicDetails) info.el.setAttribute('title', 'Details und Kalenderoptionen anzeigen');
+                if (isAdmin) info.el.setAttribute('title', 'Termin bearbeiten');
               }}
               buttonText={{ today: 'Heute', month: 'Monat', week: 'Woche', day: 'Tag', list: 'Liste' }}
               validRange={isAdmin ? undefined : { start: new Date().toISOString().split('T')[0] }}
@@ -752,6 +960,55 @@ export default function CalendarPage() {
                   <button type="submit" className="btn-primary">Login</button>
                 </form>
               </details>
+            </div>
+          )}
+
+          {/* ---- Public details modal (not logged in) ---- */}
+          {publicAppointment && (
+            <div onClick={() => setPublicModal(null)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+              <div onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="public-appointment-title"
+                style={{ background: '#fff', borderRadius: '10px', padding: '2rem', width: '100%', maxWidth: '420px', maxHeight: 'calc(100vh - 2rem)', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+                <h3 id="public-appointment-title" style={{ marginBottom: '1.25rem', color: '#1e293b' }}>
+                  {getAppointmentTitle(publicAppointment)}
+                </h3>
+
+                <div style={{ display: 'grid', gap: '0.45rem', padding: '0.85rem', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '1rem', color: '#475569', fontSize: '0.95rem' }}>
+                  <div><strong>Typ:</strong> {APPOINTMENT_LABELS[publicAppointment.type]}</div>
+                  <div><strong>Datum:</strong> {formatDateLabel(publicAppointment.date)}</div>
+                  <div><strong>Zeit:</strong> {getAppointmentTimeLabel(publicAppointment)}</div>
+                </div>
+
+                <div style={{ display: 'grid', gap: '0.75rem' }}>
+                  {publicInfoUrl && (
+                    <a href={publicInfoUrl} target="_blank" rel="noreferrer"
+                      style={{ ...publicActionStyle, background: 'linear-gradient(135deg, #dc2626 0%, #1f2937 100%)', color: '#fff' }}>
+                      Mehr Informationen
+                    </a>
+                  )}
+
+                  <div style={{ display: 'grid', gap: '0.75rem', paddingTop: publicInfoUrl ? '0.75rem' : 0, borderTop: publicInfoUrl ? '1px solid #e2e8f0' : 'none' }}>
+                    <div style={{ fontWeight: '600', color: '#1e293b' }}>In eigenen Kalender übernehmen</div>
+                    <a href={publicGoogleUrl} target="_blank" rel="noreferrer"
+                      style={{ ...publicActionStyle, background: '#f8fafc', border: '1px solid #cbd5e1', color: '#1e293b' }}>
+                      Google Kalender
+                    </a>
+                    <a href={publicOutlookUrl} target="_blank" rel="noreferrer"
+                      style={{ ...publicActionStyle, background: '#f8fafc', border: '1px solid #cbd5e1', color: '#1e293b' }}>
+                      Outlook Kalender
+                    </a>
+                    <button type="button" onClick={() => handleIcsDownload(publicAppointment)}
+                      style={{ ...publicActionStyle, background: '#f8fafc', border: '1px solid #cbd5e1', color: '#1e293b' }}>
+                      Apple / iOS / ICS (.ics)
+                    </button>
+                  </div>
+
+                  <button type="button" onClick={() => setPublicModal(null)}
+                    style={{ ...publicActionStyle, background: '#e2e8f0', color: '#1e293b', marginTop: '0.25rem' }}>
+                    Schließen
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

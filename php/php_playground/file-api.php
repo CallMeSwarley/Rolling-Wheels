@@ -2,7 +2,7 @@
 require_once __DIR__ . '/bootstrap.php';
 header('Content-Type: application/json');
 
-
+// TODO: remove core hours check
 // --- READ JSON INPUT ---
 $rawInput = file_get_contents('php://input');
 
