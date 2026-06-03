@@ -2,7 +2,6 @@
 require_once __DIR__ . '/bootstrap.php';
 header('Content-Type: application/json');
 
-// TODO: remove core hours check
 // --- READ JSON INPUT ---
 $rawInput = file_get_contents('php://input');
 
@@ -38,6 +37,29 @@ if ($action === 'read_calendar') {
     exit;
 }
 
+// if ($action === 'read_months') {
+//     if (file_exists($monthFilePath)) {
+//         $months = json_decode(file_get_contents($monthFilePath), true) ?: [];
+//         echo json_encode(['success' => true, 'months' => $months]);
+//     } else {
+//         echo json_encode(['success' => false, 'error' => 'Months file not found']);
+//     }
+//     exit;
+// }
+
+if ($action === 'read_eintritt') {
+    if (file_exists($eintrittFilePath)) {
+        $content = file_get_contents($eintrittFilePath);
+        echo json_encode(['success' => true, 'content' => $content]);
+    } else {
+        echo json_encode(['success' => false, 'error' => 'File not found']);
+    }
+    exit;
+}
+
+// =====================================================================
+// AUTH CHECK for all wradmin read actions
+// =====================================================================
 if ($action === 'read_calendar_admin') {
     if (empty($_SESSION['loggedin'])) {
         http_response_code(401);
@@ -52,26 +74,6 @@ if ($action === 'read_calendar_admin') {
     if (file_exists($calendarFilePath)) {
         $appointments = json_decode(file_get_contents($calendarFilePath), true) ?: [];
         echo json_encode(['success' => true, 'appointments' => $appointments]);
-    } else {
-        echo json_encode(['success' => false, 'error' => 'File not found']);
-    }
-    exit;
-}
-
-if ($action === 'read_months') {
-    if (file_exists($monthFilePath)) {
-        $months = json_decode(file_get_contents($monthFilePath), true) ?: [];
-        echo json_encode(['success' => true, 'months' => $months]);
-    } else {
-        echo json_encode(['success' => false, 'error' => 'Months file not found']);
-    }
-    exit;
-}
-
-if ($action === 'read_eintritt') {
-    if (file_exists($eintrittFilePath)) {
-        $content = file_get_contents($eintrittFilePath);
-        echo json_encode(['success' => true, 'content' => $content]);
     } else {
         echo json_encode(['success' => false, 'error' => 'File not found']);
     }
@@ -230,15 +232,15 @@ function insertAppointment($calendarFilePath, $monthFilePath, $newAppt) {
         }
 
         // --- Core hours check: at least 2 hours of the session must overlap with core hours ---
-        $coreStartTs  = strtotime($newAppt['date'] . ' ' . $cfg['corehours_start']);
-        $coreEndTs    = strtotime($newAppt['date'] . ' ' . $cfg['corehours_end']);
-        $overlapStart = max($newStartTs, $coreStartTs);
-        $overlapEnd   = min($newEndTs, $coreEndTs);
-        $overlapMins  = ($overlapEnd - $overlapStart) / 60;
-        if ($overlapMins < 120) {
-            flock($fp, LOCK_UN); fclose($fp);
-            return ['error' => "At least 2 hours of the session must be within core hours ({$cfg['corehours_start']} - {$cfg['corehours_end']}).", 'appointments' => $appointments];
-        }
+        // $coreStartTs  = strtotime($newAppt['date'] . ' ' . $cfg['corehours_start']);
+        // $coreEndTs    = strtotime($newAppt['date'] . ' ' . $cfg['corehours_end']);
+        // $overlapStart = max($newStartTs, $coreStartTs);
+        // $overlapEnd   = min($newEndTs, $coreEndTs);
+        // $overlapMins  = ($overlapEnd - $overlapStart) / 60;
+        // if ($overlapMins < 120) {
+        //     flock($fp, LOCK_UN); fclose($fp);
+        //     return ['error' => "At least 2 hours of the session must be within core hours ({$cfg['corehours_start']} - {$cfg['corehours_end']}).", 'appointments' => $appointments];
+        // }
 
         // --- Filter same-day sessions ---
         $daySessions = array_values(array_filter($appointments, fn($a) =>
@@ -583,81 +585,81 @@ if ($action === 'edit_appointment') {
 }
 
 // --- update_month (admin only) ---
-if ($action === 'update_month') {
-    if (!$isAdmin) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Only admins can update month configuration']);
-        exit;
-    }
+// if ($action === 'update_month') {
+//     if (!$isAdmin) {
+//         http_response_code(403);
+//         echo json_encode(['success' => false, 'error' => 'Only admins can update month configuration']);
+//         exit;
+//     }
 
-    $monthData = $input['month'] ?? null;
-    if (!$monthData || !is_array($monthData) || !isset($monthData['month'])) {
-        echo json_encode(['success' => false, 'error' => 'Missing month data']);
-        exit;
-    }
+//     $monthData = $input['month'] ?? null;
+//     if (!$monthData || !is_array($monthData) || !isset($monthData['month'])) {
+//         echo json_encode(['success' => false, 'error' => 'Missing month data']);
+//         exit;
+//     }
 
-    $monthNum = (int) $monthData['month'];
+//     $monthNum = (int) $monthData['month'];
 
-    if ($monthNum === 0) {
-        echo json_encode(['success' => false, 'error' => 'Month 0 is reserved and cannot be edited']);
-        exit;
-    }
-    if ($monthNum < 1 || $monthNum > 12) {
-        echo json_encode(['success' => false, 'error' => 'Invalid month number (1-12)']);
-        exit;
-    }
+//     if ($monthNum === 0) {
+//         echo json_encode(['success' => false, 'error' => 'Month 0 is reserved and cannot be edited']);
+//         exit;
+//     }
+//     if ($monthNum < 1 || $monthNum > 12) {
+//         echo json_encode(['success' => false, 'error' => 'Invalid month number (1-12)']);
+//         exit;
+//     }
 
-    // Block edit if sessions already exist for this month in the current year
-    $appointments = loadJSON($calendarFilePath);
-    $currentYear = (int) date('Y');
-    foreach ($appointments as $a) {
-        $apptYear = isset($a['date']) ? (int) date('Y', strtotime($a['date'])) : 0;
-        if ($a['type'] === 'session' && (int)$a['month'] === $monthNum && $apptYear === $currentYear) {
-            echo json_encode(['success' => false, 'error' => "Cannot edit month $monthNum: sessions already exist for this month."]);
-            exit;
-        }
-    }
+//     // Block edit if sessions already exist for this month in the current year
+//     $appointments = loadJSON($calendarFilePath);
+//     $currentYear = (int) date('Y');
+//     foreach ($appointments as $a) {
+//         $apptYear = isset($a['date']) ? (int) date('Y', strtotime($a['date'])) : 0;
+//         if ($a['type'] === 'session' && (int)$a['month'] === $monthNum && $apptYear === $currentYear) {
+//             echo json_encode(['success' => false, 'error' => "Cannot edit month $monthNum: sessions already exist for this month."]);
+//             exit;
+//         }
+//     }
 
-    if (!validateTimeFormat($monthData['corehours_start'] ?? '')
-        || !validateTimeFormat($monthData['corehours_end'] ?? '')) {
-        echo json_encode(['success' => false, 'error' => 'Core hours must be in HH:MM format']);
-        exit;
-    }
-    if (!is_numeric($monthData['min_gap_mins']) || (int)$monthData['min_gap_mins'] < 0) {
-        echo json_encode(['success' => false, 'error' => 'min_gap_mins must be a non-negative integer']);
-        exit;
-    }
+//     if (!validateTimeFormat($monthData['corehours_start'] ?? '')
+//         || !validateTimeFormat($monthData['corehours_end'] ?? '')) {
+//         echo json_encode(['success' => false, 'error' => 'Core hours must be in HH:MM format']);
+//         exit;
+//     }
+//     if (!is_numeric($monthData['min_gap_mins']) || (int)$monthData['min_gap_mins'] < 0) {
+//         echo json_encode(['success' => false, 'error' => 'min_gap_mins must be a non-negative integer']);
+//         exit;
+//     }
 
-    $fp = fopen($monthFilePath, 'c+');
-    if (!$fp) { echo json_encode(['success' => false, 'error' => 'Cannot open months file']); exit; }
-    if (!flock($fp, LOCK_EX)) { fclose($fp); echo json_encode(['success' => false, 'error' => 'Cannot lock file']); exit; }
+//     $fp = fopen($monthFilePath, 'c+');
+//     if (!$fp) { echo json_encode(['success' => false, 'error' => 'Cannot open months file']); exit; }
+//     if (!flock($fp, LOCK_EX)) { fclose($fp); echo json_encode(['success' => false, 'error' => 'Cannot lock file']); exit; }
 
-    $months = json_decode(stream_get_contents($fp), true) ?: [];
-    $found  = false;
-    foreach ($months as &$m) {
-        if ((int)$m['month'] === $monthNum) {
-            $m['min_gap_mins']    = (int) $monthData['min_gap_mins'];
-            $m['corehours_start'] = $monthData['corehours_start'];
-            $m['corehours_end']   = $monthData['corehours_end'];
-            $found = true;
-            break;
-        }
-    }
-    unset($m);
+//     $months = json_decode(stream_get_contents($fp), true) ?: [];
+//     $found  = false;
+//     foreach ($months as &$m) {
+//         if ((int)$m['month'] === $monthNum) {
+//             $m['min_gap_mins']    = (int) $monthData['min_gap_mins'];
+//             $m['corehours_start'] = $monthData['corehours_start'];
+//             $m['corehours_end']   = $monthData['corehours_end'];
+//             $found = true;
+//             break;
+//         }
+//     }
+//     unset($m);
 
-    if (!$found) {
-        flock($fp, LOCK_UN); fclose($fp);
-        echo json_encode(['success' => false, 'error' => 'Month not found in config']);
-        exit;
-    }
+//     if (!$found) {
+//         flock($fp, LOCK_UN); fclose($fp);
+//         echo json_encode(['success' => false, 'error' => 'Month not found in config']);
+//         exit;
+//     }
 
-    saveJSONToHandle($fp, $months);
-    flock($fp, LOCK_UN);
-    fclose($fp);
+//     saveJSONToHandle($fp, $months);
+//     flock($fp, LOCK_UN);
+//     fclose($fp);
 
-    echo json_encode(['success' => true, 'months' => $months]);
-    exit;
-}
+//     echo json_encode(['success' => true, 'months' => $months]);
+//     exit;
+// }
 
 echo json_encode(['success' => false, 'error' => 'Invalid action']);
 ?>

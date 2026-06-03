@@ -145,9 +145,9 @@ async function loadCalendarAdmin() {
   return apiFetch('file-api.php', { action: 'read_calendar_admin' });
 }
 
-async function loadMonths() {
-  return apiFetch('file-api.php', { action: 'read_months' });
-}
+// async function loadMonths() {
+//   return apiFetch('file-api.php', { action: 'read_months' });
+// }
 
 async function addAppointment(appointment: Omit<Appointment, 'responsible' | 'month'>) {
   return apiFetch('file-api.php', { action: 'add_appointment', appointment });
@@ -161,9 +161,9 @@ async function editAppointment(index: number, appointment: Omit<Appointment, 're
   return apiFetch('file-api.php', { action: 'edit_appointment', index, appointment });
 }
 
-async function updateMonthConfig(month: Partial<MonthConfig> & { month: number }) {
-  return apiFetch('file-api.php', { action: 'update_month', month });
-}
+// async function updateMonthConfig(month: Partial<MonthConfig> & { month: number }) {
+//   return apiFetch('file-api.php', { action: 'update_month', month });
+// }
 
 type EditModal = { appointment: Appointment; index: number } | null;
 type PublicDetailsModal = { appointment: Appointment } | null;
@@ -226,10 +226,6 @@ function formatCalendarDateTime(date: string, time: string) {
   return `${date.replace(/-/g, '')}T${cleanTime}`;
 }
 
-function formatOutlookDateTime(date: string, time: string) {
-  const cleanTime = time.length === 5 ? `${time}:00` : time;
-  return `${date}T${cleanTime}`;
-}
 
 function getCalendarDetails(appointment: Appointment) {
   const details = [
@@ -247,24 +243,9 @@ function buildGoogleCalendarUrl(appointment: Appointment) {
     text: getAppointmentTitle(appointment),
     dates: `${formatCalendarDateTime(appointment.date, appointment.start)}/${formatCalendarDateTime(appointment.date, appointment.end)}`,
     details: getCalendarDetails(appointment),
-    ctz: CALENDAR_TIME_ZONE,
   });
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
-}
-
-function buildOutlookCalendarUrl(appointment: Appointment) {
-  const params = new URLSearchParams({
-    path: '/calendar/action/compose',
-    rru: 'addevent',
-    subject: getAppointmentTitle(appointment),
-    startdt: formatOutlookDateTime(appointment.date, appointment.start),
-    enddt: formatOutlookDateTime(appointment.date, appointment.end),
-    body: getCalendarDetails(appointment),
-    timezone: CALENDAR_TIME_ZONE,
-  });
-
-  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
 }
 
 function escapeIcsText(value: string) {
@@ -352,7 +333,7 @@ function buildIcsFilename(appointment: Appointment) {
 export default function CalendarPage() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [months, setMonths] = useState<MonthConfig[]>([]);
+  // const [months, setMonths] = useState<MonthConfig[]>([]);
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [roles, setRoles] = useState<string[]>([]);
@@ -364,9 +345,9 @@ export default function CalendarPage() {
   const [publicModal, setPublicModal] = useState<PublicDetailsModal>(null);
 
   // Month-config admin form
-  const [selMonth, setSelMonth] = useState<number>(1);
-  const [monthForm, setMonthForm] = useState({ min_gap_mins: 120, corehours_start: '09:00', corehours_end: '17:00' });
-  const [monthFormMsg, setMonthFormMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // const [selMonth, setSelMonth] = useState<number>(1);
+  // const [monthForm, setMonthForm] = useState({ min_gap_mins: 120, corehours_start: '09:00', corehours_end: '17:00' });
+  // const [monthFormMsg, setMonthFormMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const isAdmin = roles.includes('admin');
   const isDev = roles.includes('dev');
@@ -376,10 +357,10 @@ export default function CalendarPage() {
   const canChooseType = isAdmin || isDev;
 
   // Sync monthForm when selected month changes
-  useEffect(() => {
-    const cfg = months.find(m => m.month === selMonth);
-    if (cfg) setMonthForm({ min_gap_mins: cfg.min_gap_mins, corehours_start: cfg.corehours_start, corehours_end: cfg.corehours_end });
-  }, [selMonth, months]);
+  // useEffect(() => {
+  //   const cfg = months.find(m => m.month === selMonth);
+  //   if (cfg) setMonthForm({ min_gap_mins: cfg.min_gap_mins, corehours_start: cfg.corehours_start, corehours_end: cfg.corehours_end });
+  // }, [selMonth, months]);
 
   useEffect(() => {
     const check = () => setSmallScreen(window.innerWidth < 600);
@@ -398,11 +379,11 @@ export default function CalendarPage() {
     load().catch(console.error);
   }, [isAdmin]);
 
-  useEffect(() => {
-    loadMonths().then(data => {
-      if (data.success) setMonths(data.months);
-    }).catch(console.error);
-  }, []);
+  // useEffect(() => {
+  //   loadMonths().then(data => {
+  //     if (data.success) setMonths(data.months);
+  //   }).catch(console.error);
+  // }, []);
 
   // Check session
   useEffect(() => {
@@ -502,26 +483,26 @@ export default function CalendarPage() {
     } catch (err) { console.error(err); alert('Unerwarteter Fehler'); }
   };
 
-  const handleUpdateMonth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMonthFormMsg(null);
-    try {
-      const result = await updateMonthConfig({ month: selMonth, ...monthForm });
-      if (!result.success) { setMonthFormMsg({ ok: false, text: result.error || 'Fehler' }); return; }
-      setMonths(result.months);
-      setMonthFormMsg({ ok: true, text: 'Konfiguration gespeichert!' });
-    } catch { setMonthFormMsg({ ok: false, text: 'Netzwerkfehler' }); }
-  };
+  // const handleUpdateMonth = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setMonthFormMsg(null);
+  //   try {
+  //     const result = await updateMonthConfig({ month: selMonth, ...monthForm });
+  //     if (!result.success) { setMonthFormMsg({ ok: false, text: result.error || 'Fehler' }); return; }
+  //     setMonths(result.months);
+  //     setMonthFormMsg({ ok: true, text: 'Konfiguration gespeichert!' });
+  //   } catch { setMonthFormMsg({ ok: false, text: 'Netzwerkfehler' }); }
+  // };
 
-  const selMonthCfg = months.find(m => m.month === selMonth);
-  const currentYear = new Date().getFullYear();
-  const selMonthHasSessions = appointments.some(
-    a => a.type === 'session' && a.month === selMonth && new Date(a.date).getFullYear() === currentYear
-  );
+  // const selMonthCfg = months.find(m => m.month === selMonth);
+  // const currentYear = new Date().getFullYear();
+  // const selMonthHasSessions = appointments.some(
+  //   a => a.type === 'session' && a.month === selMonth && new Date(a.date).getFullYear() === currentYear
+  // );
 
-  const activeCfg = form.type === 'session'
-    ? months.find(m => m.month === (form.date ? new Date(form.date).getMonth() + 1 : 0))
-    : null;
+  // const activeCfg = form.type === 'session'
+  //   ? months.find(m => m.month === (form.date ? new Date(form.date).getMonth() + 1 : 0))
+  //   : null;
 
   const handleCalendarEventClick = (clickInfo: any) => {
     if (isAdmin) {
@@ -585,7 +566,6 @@ export default function CalendarPage() {
   const publicAppointment = publicModal?.appointment;
   const publicInfoUrl = publicAppointment ? getHttpUrl(publicAppointment.url) : '';
   const publicGoogleUrl = publicAppointment ? buildGoogleCalendarUrl(publicAppointment) : '';
-  const publicOutlookUrl = publicAppointment ? buildOutlookCalendarUrl(publicAppointment) : '';
 
   useEffect(() => {
     const sendHeight = () => {
@@ -748,7 +728,7 @@ export default function CalendarPage() {
                 <div>
                   <h3 style={{ color: '#dc2626', marginBottom: '0.5rem' }}>Neuen Termin eintragen</h3>
                   <p style={{ color: '#718096', fontSize: '0.9rem', marginBottom: '1rem' }}>
-                    Sessions: Mindestdauer 2 Stunden. Kernzeiten und Abstände gelten je nach Monatskonfiguration. Keine Ueberschneidung mit Event/Workshop erlaubt.
+                    Sessions: Mindestdauer 2 Stunden. Abstände gelten je nach Monatskonfiguration. Keine Ueberschneidung mit Event/Workshop erlaubt.
                   </p>
                 </div>
                 <button onClick={handleLogout} className="btn-logout">Logout</button>
@@ -855,11 +835,14 @@ export default function CalendarPage() {
                 )}
 
                 {/* Session hint: core hours & gap */}
-                {form.type === 'session' && form.date && activeCfg && (
+                {form.type === 'session' && form.date  && (
+                  // && activeCfg
                   <div style={{ background: '#fefce8', border: '1px solid #fde047', borderRadius: '6px', padding: '0.75rem', fontSize: '0.85rem', color: '#713f12' }}>
-                    <strong>Monat {activeCfg.month_name}:</strong>&nbsp;
-                    Mind. 2 Std. innerhalb der Kernzeiten {activeCfg.corehours_start}–{activeCfg.corehours_end} |&nbsp;
-                    Min. Abstand (wenn nicht angrenzend/überlappend): {activeCfg.min_gap_mins === 0 ? 'kein Abstand erlaubt (angrenzend)' : `${activeCfg.min_gap_mins} Minuten`}
+                    {/* <strong>Monat {activeCfg.month_name}:</strong>&nbsp; */}
+                    Mind. 2 Stunden |&nbsp;
+                    {/* innerhalb der Kernzeiten {activeCfg.corehours_start}–{activeCfg.corehours_end}  */}
+                    Min. Abstand (wenn nicht angrenzend/überlappend): 120 Minuten
+                    {/* {activeCfg.min_gap_mins === 0 ? 'kein Abstand erlaubt (angrenzend)' : `${activeCfg.min_gap_mins} */}
                   </div>
                 )}
 
@@ -869,7 +852,7 @@ export default function CalendarPage() {
               </form>
 
               {/* ---- Month config editor (admin only) ---- */}
-              {isAdmin && (
+              {/* {isAdmin && (
                 <div style={{ marginTop: '3rem', padding: '1.5rem', background: '#f5f3ff', border: '1px solid #c4b5fd', borderRadius: '8px' }}>
                   <h4 style={{ color: '#6b21a8', marginBottom: '1rem' }}> Monatskonfiguration (Admin)</h4>
                   <div style={{ marginBottom: '1rem' }}>
@@ -925,7 +908,7 @@ export default function CalendarPage() {
                     )}
                   </form>
                 </div>
-              )}
+              )} */}
             </div>
           ) : (
             /* ---- Login section ---- */
@@ -992,10 +975,6 @@ export default function CalendarPage() {
                     <a href={publicGoogleUrl} target="_blank" rel="noreferrer"
                       style={{ ...publicActionStyle, background: '#f8fafc', border: '1px solid #cbd5e1', color: '#1e293b' }}>
                       Google Kalender
-                    </a>
-                    <a href={publicOutlookUrl} target="_blank" rel="noreferrer"
-                      style={{ ...publicActionStyle, background: '#f8fafc', border: '1px solid #cbd5e1', color: '#1e293b' }}>
-                      Outlook Kalender
                     </a>
                     <button type="button" onClick={() => handleIcsDownload(publicAppointment)}
                       style={{ ...publicActionStyle, background: '#f8fafc', border: '1px solid #cbd5e1', color: '#1e293b' }}>
