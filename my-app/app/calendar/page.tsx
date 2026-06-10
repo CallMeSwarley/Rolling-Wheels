@@ -1,5 +1,4 @@
 ﻿"use client";
-// TODO: remove core hours check
 import { Appointment, AppointmentType, MonthConfig } from '@/types';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
@@ -508,7 +507,6 @@ export default function CalendarPage() {
       handleEventClick(clickInfo);
       return;
     }
-    if (isLoggedIn) return;
 
     const appointment: Appointment | null = clickInfo.event.extendedProps.appointment;
     const mergedSession: MergedSession | undefined = clickInfo.event.extendedProps.mergedSession;
@@ -565,7 +563,6 @@ export default function CalendarPage() {
   const publicAppointment = publicModal?.appointment;
   const publicInfoUrl = publicAppointment ? getHttpUrl(publicAppointment.url) : '';
   const publicGoogleUrl = publicAppointment ? buildGoogleCalendarUrl(publicAppointment) : '';
-  const publicOutlookUrl = publicAppointment ? buildOutlookCalendarUrl(publicAppointment) : '';
 
   return (
     <div className="main-content">

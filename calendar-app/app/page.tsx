@@ -1,5 +1,4 @@
 ﻿"use client";
-// TODO: remove core hours check
 import { Appointment, AppointmentType, MonthConfig } from '@/types';
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
@@ -509,7 +508,6 @@ export default function CalendarPage() {
       handleEventClick(clickInfo);
       return;
     }
-    if (isLoggedIn) return;
 
     const appointment: Appointment | null = clickInfo.event.extendedProps.appointment;
     const mergedSession: MergedSession | undefined = clickInfo.event.extendedProps.mergedSession;
